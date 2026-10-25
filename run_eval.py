@@ -13,8 +13,8 @@ Fill in `scenarios.py` first — that's where you say what each criterion needs
 run against it. A criterion about false positives needs your own writing. One
 about label coverage needs inputs across the score range.
 
-!! Three trials, and **your first signal runs a model, so identical input can
-score differently twice.** That's exactly why repeats matter here.
+Three trials check repeatability. The provided detector uses evaluation mode
+without sampling; repeated inputs are not intentionally randomized.
 
 This does the sending and the recording. It does not decide whether a trial
 passed — that depends on the criterion you wrote, so the Verdict column comes

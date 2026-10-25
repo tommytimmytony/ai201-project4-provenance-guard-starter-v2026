@@ -2,6 +2,29 @@
 
 Everything about how the starter works.
 
+## Completed local implementation
+
+From PowerShell in this project directory:
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest test_service -v
+$env:AI201_DEBUG = "0"
+.\.venv\Scripts\python.exe app.py
+```
+
+In a second terminal:
+
+```powershell
+.\.venv\Scripts\python.exe run_demo.py
+.\.venv\Scripts\python.exe run_eval.py --label local
+```
+
+`run_demo.py` exercises real GPT-2 inference, all three labels, appeals, and
+invalid/oversized requests across three trials. It records JSON evidence in
+`results`. Its AI-authored passages are calibration cases, not an accuracy
+dataset. `test_service.py` is the offline regression suite and mocks inference.
+See the README for the endpoint contracts and scoring rule.
+
 This is a **web service**. It runs on your machine and you talk to it with
 `curl` from another terminal. If you've not built a backend before, that's
 assumed — the starter ships one that already answers.
@@ -73,11 +96,12 @@ Then try the route you're going to build:
 ```bash
 curl -X POST http://127.0.0.1:5000/submit \
   -H "Content-Type: application/json" \
-  -d '{"text": "some writing", "creator_id": "me"}'
+  -d '{"text": "some writing to score", "creator_id": "me"}'
 ```
 
-It returns a `501` saying it isn't built yet. **That's the correct starting
-position.**
+The completed implementation returns a scored decision for valid input.
+Use at least three words and a nonblank `creator_id`; the first request may
+take longer while GPT-2 downloads and loads.
 
 ---
 
@@ -88,8 +112,8 @@ position.**
 | `POST /ping` | **works** | The example. Don't edit it |
 | `GET /health` | **works** | Is the service up, is the model loaded |
 | `GET /log` | **works** | The audit log, as JSON |
-| `POST /submit` | **you build it** | Milestones 3, 4, 5 |
-| `POST /appeal` | **you build it** | Milestone 5 |
+| `POST /submit` | **works** | Validate, score, label, and log |
+| `POST /appeal` | **works** | Record review of a known submission |
 
 ---
 
@@ -101,7 +125,9 @@ position.**
 | `python app.py` | Runs the service |
 | `python detector.py` | Downloads the model and scores a sample — **run before class** |
 | `python detector.py "some text"` | Score one piece of text from the terminal |
-| `python stylometry.py "some text"` | Your style measures, on one piece of text |
+| `python stylometry.py "some text"` | Style measures, on one piece of text |
+| `python -m unittest test_service -v` | Offline regression tests; inference mocked |
+| `python run_demo.py` | Real HTTP calibration and appeal/validation evidence |
 | `python run_attacks.py --set <folder>` | The attack set — **unit 8** |
 | `python run_attacks.py --flood 15` | Push past your rate limit and print the status codes — **unit 8** |
 | `python run_eval.py --label before` | Your five criteria, three trials — **unit 8** |
@@ -160,7 +186,7 @@ Three steps:
 1. In `config.py`, set `RATE_LIMITING_ENABLED = True` — or run with
    `AI201_RATE_LIMITS=1`.
 2. Choose your numbers there.
-3. In `app.py`, uncomment the `@limiter.limit(...)` line above `submit`.
+3. The `@limiter.limit(...)` decorator is already enabled in `app.py`.
 
 Then push past your limit and watch for `429`:
 
