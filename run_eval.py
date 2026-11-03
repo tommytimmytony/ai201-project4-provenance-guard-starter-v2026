@@ -16,9 +16,9 @@ about label coverage needs inputs across the score range.
 Three trials check repeatability. The provided detector uses evaluation mode
 without sampling; repeated inputs are not intentionally randomized.
 
-This does the sending and the recording. It does not decide whether a trial
-passed — that depends on the criterion you wrote, so the Verdict column comes
-back blank.
+This does the sending and the recording. Executable checks in scenarios.py
+decide against the unchanged targets; the overall verdict is MET only if
+every trial passes. Legacy text/body scenarios still leave verdicts blank.
 """
 
 import argparse

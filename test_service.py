@@ -51,7 +51,8 @@ class ScoringTests(unittest.TestCase):
 
     def test_label_boundaries(self):
         for value, expected in (
-            (0, "human"), (0.35, "human"), (0.3501, "unsure"),
+            (0, "human"), (0.20, "human"), (0.2001, "unsure"),
+            (0.3120, "unsure"), (0.3328, "unsure"), (0.35, "unsure"),
             (0.6499, "unsure"), (0.65, "ai"), (1, "ai"),
         ):
             with self.subTest(score=value):
@@ -74,7 +75,7 @@ class ServiceTests(unittest.TestCase):
             patcher = patch.object(config, name, value)
             patcher.start()
             self.addCleanup(patcher.stop)
-        patcher = patch.object(app.limiter, "enabled", False)
+        patcher = patch.object(app.limiter, "enabled", False, create=True)
         patcher.start()
         self.addCleanup(patcher.stop)
         self.client = app.app.test_client()

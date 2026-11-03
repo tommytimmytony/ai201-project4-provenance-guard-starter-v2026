@@ -75,7 +75,7 @@ DISAGREEMENT_THRESHOLD = 0.5
 # getting through. There is no setting that avoids the trade — only settings
 # that decide who pays for it.
 
-HUMAN_THRESHOLD = 0.35
+HUMAN_THRESHOLD = 0.20
 AI_THRESHOLD = 0.65
 
 # ─── Rate limiting (UNIT 8) ──────────────────────────────────────────────────

@@ -1,0 +1,411 @@
+{
+  "note": "Supplemental AI-authored local set only; not the staff attack set or a human accuracy evaluation.",
+  "before_attack_source": "attack_run_2026-11-03_012447_091516_before.json",
+  "after_attack_source": "attack_run_2026-11-03_013610_344547_after.json",
+  "before_criteria_source": "run_2026-11-03_012959_637500_before.json",
+  "after_criteria_source": "run_2026-11-03_013935_033230_after.json",
+  "human_threshold_before": 0.35,
+  "human_threshold_after": 0.2,
+  "before_counts": {
+    "held": 25,
+    "broke": 4
+  },
+  "after_counts": {
+    "held": 27,
+    "broke": 2
+  },
+  "changed_labels": [
+    "EV04",
+    "PI01",
+    "FD01",
+    "FD02",
+    "FD03",
+    "FD04",
+    "FD05",
+    "FD06",
+    "FD07",
+    "FD08",
+    "FD09",
+    "FD10"
+  ],
+  "scores_unchanged": true,
+  "criteria": [
+    {
+      "criterion": 1,
+      "function": "score_spread",
+      "target": "spread >= 0.30",
+      "before": [
+        0.822,
+        0.822,
+        0.822
+      ],
+      "after": [
+        0.822,
+        0.822,
+        0.822
+      ],
+      "before_verdict": "MET",
+      "after_verdict": "MET"
+    },
+    {
+      "criterion": 2,
+      "function": "label_coverage",
+      "target": "3/3 labels; all scores bounded",
+      "before": [
+        "3/3",
+        "3/3",
+        "3/3"
+      ],
+      "after": [
+        "3/3",
+        "3/3",
+        "3/3"
+      ],
+      "before_verdict": "MET",
+      "after_verdict": "MET"
+    },
+    {
+      "criterion": 3,
+      "function": "appeal_traceability",
+      "target": "3/3 traceability checks",
+      "before": [
+        "3/3",
+        "3/3",
+        "3/3"
+      ],
+      "after": [
+        "3/3",
+        "3/3",
+        "3/3"
+      ],
+      "before_verdict": "MET",
+      "after_verdict": "MET"
+    },
+    {
+      "criterion": 4,
+      "function": "invalid_input",
+      "target": "12/12 expected rejections; all logged",
+      "before": [
+        "12/12",
+        "12/12",
+        "12/12"
+      ],
+      "after": [
+        "12/12",
+        "12/12",
+        "12/12"
+      ],
+      "before_verdict": "MET",
+      "after_verdict": "MET"
+    },
+    {
+      "criterion": 5,
+      "function": "size_limits",
+      "target": "3/3 expected rejections; all logged",
+      "before": [
+        "3/3",
+        "3/3",
+        "3/3"
+      ],
+      "after": [
+        "3/3",
+        "3/3",
+        "3/3"
+      ],
+      "before_verdict": "MET",
+      "after_verdict": "MET"
+    }
+  ],
+  "attacks": [
+    {
+      "id": "EV01",
+      "status_before": 200,
+      "status_after": 200,
+      "guess_before": "ai",
+      "guess_after": "ai",
+      "combined_score": 0.955,
+      "before": "HELD",
+      "after": "HELD"
+    },
+    {
+      "id": "EV02",
+      "status_before": 200,
+      "status_after": 200,
+      "guess_before": "human",
+      "guess_after": "human",
+      "combined_score": 0.1321,
+      "before": "BROKE",
+      "after": "BROKE"
+    },
+    {
+      "id": "EV03",
+      "status_before": 200,
+      "status_after": 200,
+      "guess_before": "unsure",
+      "guess_after": "unsure",
+      "combined_score": 0.4568,
+      "before": "HELD",
+      "after": "HELD"
+    },
+    {
+      "id": "EV04",
+      "status_before": 200,
+      "status_after": 200,
+      "guess_before": "human",
+      "guess_after": "unsure",
+      "combined_score": 0.3328,
+      "before": "BROKE",
+      "after": "HELD"
+    },
+    {
+      "id": "EV05",
+      "status_before": 200,
+      "status_after": 200,
+      "guess_before": "human",
+      "guess_after": "human",
+      "combined_score": 0.0842,
+      "before": "BROKE",
+      "after": "BROKE"
+    },
+    {
+      "id": "PI01",
+      "status_before": 200,
+      "status_after": 200,
+      "guess_before": "human",
+      "guess_after": "unsure",
+      "combined_score": 0.312,
+      "before": "BROKE",
+      "after": "HELD"
+    },
+    {
+      "id": "MD01",
+      "status_before": 400,
+      "status_after": 400,
+      "guess_before": null,
+      "guess_after": null,
+      "combined_score": null,
+      "before": "HELD",
+      "after": "HELD"
+    },
+    {
+      "id": "MD02",
+      "status_before": 400,
+      "status_after": 400,
+      "guess_before": null,
+      "guess_after": null,
+      "combined_score": null,
+      "before": "HELD",
+      "after": "HELD"
+    },
+    {
+      "id": "MD03",
+      "status_before": 415,
+      "status_after": 415,
+      "guess_before": null,
+      "guess_after": null,
+      "combined_score": null,
+      "before": "HELD",
+      "after": "HELD"
+    },
+    {
+      "id": "MD04",
+      "status_before": 400,
+      "status_after": 400,
+      "guess_before": null,
+      "guess_after": null,
+      "combined_score": null,
+      "before": "HELD",
+      "after": "HELD"
+    },
+    {
+      "id": "MD05",
+      "status_before": 400,
+      "status_after": 400,
+      "guess_before": null,
+      "guess_after": null,
+      "combined_score": null,
+      "before": "HELD",
+      "after": "HELD"
+    },
+    {
+      "id": "MD06",
+      "status_before": 400,
+      "status_after": 400,
+      "guess_before": null,
+      "guess_after": null,
+      "combined_score": null,
+      "before": "HELD",
+      "after": "HELD"
+    },
+    {
+      "id": "MD07",
+      "status_before": 415,
+      "status_after": 415,
+      "guess_before": null,
+      "guess_after": null,
+      "combined_score": null,
+      "before": "HELD",
+      "after": "HELD"
+    },
+    {
+      "id": "MD08",
+      "status_before": 422,
+      "status_after": 422,
+      "guess_before": null,
+      "guess_after": null,
+      "combined_score": null,
+      "before": "HELD",
+      "after": "HELD"
+    },
+    {
+      "id": "FD01",
+      "status_before": 200,
+      "status_after": 200,
+      "guess_before": "human",
+      "guess_after": "unsure",
+      "combined_score": 0.2505,
+      "before": "HELD",
+      "after": "HELD"
+    },
+    {
+      "id": "FD02",
+      "status_before": 200,
+      "status_after": 200,
+      "guess_before": "human",
+      "guess_after": "unsure",
+      "combined_score": 0.2505,
+      "before": "HELD",
+      "after": "HELD"
+    },
+    {
+      "id": "FD03",
+      "status_before": 200,
+      "status_after": 200,
+      "guess_before": "human",
+      "guess_after": "unsure",
+      "combined_score": 0.2505,
+      "before": "HELD",
+      "after": "HELD"
+    },
+    {
+      "id": "FD04",
+      "status_before": 200,
+      "status_after": 200,
+      "guess_before": "human",
+      "guess_after": "unsure",
+      "combined_score": 0.2505,
+      "before": "HELD",
+      "after": "HELD"
+    },
+    {
+      "id": "FD05",
+      "status_before": 200,
+      "status_after": 200,
+      "guess_before": "human",
+      "guess_after": "unsure",
+      "combined_score": 0.2505,
+      "before": "HELD",
+      "after": "HELD"
+    },
+    {
+      "id": "FD06",
+      "status_before": 200,
+      "status_after": 200,
+      "guess_before": "human",
+      "guess_after": "unsure",
+      "combined_score": 0.2505,
+      "before": "HELD",
+      "after": "HELD"
+    },
+    {
+      "id": "FD07",
+      "status_before": 200,
+      "status_after": 200,
+      "guess_before": "human",
+      "guess_after": "unsure",
+      "combined_score": 0.2505,
+      "before": "HELD",
+      "after": "HELD"
+    },
+    {
+      "id": "FD08",
+      "status_before": 200,
+      "status_after": 200,
+      "guess_before": "human",
+      "guess_after": "unsure",
+      "combined_score": 0.2505,
+      "before": "HELD",
+      "after": "HELD"
+    },
+    {
+      "id": "FD09",
+      "status_before": 200,
+      "status_after": 200,
+      "guess_before": "human",
+      "guess_after": "unsure",
+      "combined_score": 0.2505,
+      "before": "HELD",
+      "after": "HELD"
+    },
+    {
+      "id": "FD10",
+      "status_before": 200,
+      "status_after": 200,
+      "guess_before": "human",
+      "guess_after": "unsure",
+      "combined_score": 0.2505,
+      "before": "HELD",
+      "after": "HELD"
+    },
+    {
+      "id": "FD11",
+      "status_before": 429,
+      "status_after": 429,
+      "guess_before": null,
+      "guess_after": null,
+      "combined_score": null,
+      "before": "HELD",
+      "after": "HELD"
+    },
+    {
+      "id": "FD12",
+      "status_before": 429,
+      "status_after": 429,
+      "guess_before": null,
+      "guess_after": null,
+      "combined_score": null,
+      "before": "HELD",
+      "after": "HELD"
+    },
+    {
+      "id": "FD13",
+      "status_before": 429,
+      "status_after": 429,
+      "guess_before": null,
+      "guess_after": null,
+      "combined_score": null,
+      "before": "HELD",
+      "after": "HELD"
+    },
+    {
+      "id": "FD14",
+      "status_before": 429,
+      "status_after": 429,
+      "guess_before": null,
+      "guess_after": null,
+      "combined_score": null,
+      "before": "HELD",
+      "after": "HELD"
+    },
+    {
+      "id": "FD15",
+      "status_before": 429,
+      "status_after": 429,
+      "guess_before": null,
+      "guess_after": null,
+      "combined_score": null,
+      "before": "HELD",
+      "after": "HELD"
+    }
+  ]
+}
