@@ -48,21 +48,23 @@ In another terminal:
 .\.venv\Scripts\python.exe -m unittest test_service test_evaluation -v
 .\.venv\Scripts\python.exe -c "import requests; r=requests.post('http://127.0.0.1:5018/submit',json={'text':'three valid words','creator_id':'model_warmup'},timeout=300); r.raise_for_status()"
 .\.venv\Scripts\python.exe run_attacks.py --flood 15 --creator fresh_flood --url http://127.0.0.1:5018 --timeout 300
-.\.venv\Scripts\python.exe run_attacks.py --set local_attacks --label after --url http://127.0.0.1:5018 --timeout 300
-.\.venv\Scripts\python.exe run_eval.py --label after --url http://127.0.0.1:5018 --timeout 300
+.\.venv\Scripts\python.exe run_attacks.py --set staff_attacks --label staff_after --url http://127.0.0.1:5018 --timeout 300
+.\.venv\Scripts\python.exe run_eval.py --label staff_after --url http://127.0.0.1:5018 --timeout 300
 ```
 
 The current human threshold is 0.20. To reproduce the retained before
 configuration, temporarily set `HUMAN_THRESHOLD = 0.35` in `config.py`,
-restart and warm the server, then run with `--label before`. Restore 0.20
+restart and warm the server, then run with `--label staff_before`. Restore 0.20
 and restart before the after run. `--label` names evidence files; it does
 not change the detector configuration. Use a new flood creator on each
 repeat or restart to reset its quota.
 
-`local_attacks` is AI-authored supplemental testing, NOT the required staff
-set. When the TF supplies the folder holding both attack CSVs, use that folder
-with `--set`. The recorded local results do not establish human false-positive
-performance.
+`staff_attacks` holds the supplied course CSVs copied unchanged from
+`Downloads\attack_set\attack_set`. Their hashes and fixed judgment rules are
+recorded in that folder; `.gitattributes` prevents newline conversion.
+`local_attacks` remains the earlier AI-authored supplemental set, not the
+staff set. Staff false-positive judgments use the family's intended ground
+truth; they do not establish independently verified real-world accuracy.
 
 `scenarios.py` executes all five unchanged reference criteria, including
 appeals, all invalid-input variants, and both size limits. It waits 65 seconds
@@ -74,7 +76,7 @@ compare the exact entries appended during each trial.
 Runners produce paired Markdown and JSON evidence with unique timestamps.
 For a controlled after run, restart the service to reset its in-memory
 limiter, warm GPT-2 with a separate creator, then run the identical commands
-with `--label after`. Do not clear the append-only audit history.
+with `--label staff_after`. Do not clear the append-only audit history.
 
 This is a **web service**. It runs on your machine and you talk to it with
 `curl` from another terminal. If you've not built a backend before, that's
@@ -249,9 +251,11 @@ That sends 15 submissions from one `creator_id` and prints the run of status
 codes — `200 200 200 ... 429 429` — which is exactly what your README's **Rate
 Limiting** section asks you to paste. It also writes `results/flood_<date>.md`.
 
-The attack set can't do this for you. Every attack row submits under its own
-`creator_id`, so a full attack run looks like forty-odd different callers and
-never trips a limit however long it is.
+Most supplied attack rows use distinct `creator_id` values and therefore do
+not exercise one caller's quota. The `flood_same_creator` rows are the
+exception: the supplied file contains twelve shared-creator submissions,
+which produced ten 200s and two logged 429s in each measured phase. Keep the
+separate 15-request flood as the Rate Limiting section's explicit check.
 
 No `429` at all? Either your limit is above 15 a minute, or rate limiting is
 still off. `GET /health` reports which.

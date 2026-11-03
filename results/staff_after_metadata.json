@@ -1,0 +1,21 @@
+{
+  "phase": "staff_after",
+  "recorded_at": "2026-11-03T10:01:25.197510+00:00",
+  "human_threshold": 0.2,
+  "ai_threshold": 0.65,
+  "model_weight": 0.5,
+  "style_weight": 0.5,
+  "disagreement_threshold": 0.5,
+  "health": {
+    "detector_loaded": true,
+    "detector_model": "gpt2",
+    "log_entries": 469,
+    "ok": true,
+    "rate_limiting": true
+  },
+  "audit_start_count": 469,
+  "input_sha256": {
+    "attacks.csv": "b28bd0987337815a41d46be95442c89b6828d50f0de1dc258e1e7b3d43d1deb2",
+    "attacks_malformed_requests.csv": "9f0ea9aaf4ec5cefc2e04d09987b203f23c76c792e3450c030dd14f730334cfa"
+  }
+}
