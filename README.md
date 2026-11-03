@@ -477,6 +477,26 @@ All three are logged rejections; none is a decision or appeal.
 These are AI-assisted diagnoses grounded in the recorded scores and the
 actual functions, not a claimed independent student's analysis.
 
+**How each criterion was called:** C1 is MET because 0.8220 exceeds 0.30
+in all three trials. C2 is MET because every trial reaches all three labels
+and every returned numeric score is finite and bounded. C3 is MET because
+each trial preserves the original, appends the correct review event, and
+rejects the unknown ID without an appeal. C4 is MET because each trial gets
+all twelve exact error statuses and twelve rejection events, not decisions.
+C5 is MET because both size errors and oversized reasoning have the exact
+expected statuses and rejection events in all three trials. No target was
+relaxed and no criterion was revised.
+
+The strongest argument against C2's MET verdict is that AI-authored prose
+reaches `human`, which is bad detection. That does not falsify this target:
+it measures interface coverage, not accuracy. The recorded guesses and bounded
+scores settle coverage; a provenance-labeled human/AI dataset is needed to
+settle accuracy. Passing all five reference criteria while four local attacks
+break shows the targets are limited. I would add a separate target for
+false-human labels on held-out AI writing and a human false-positive target
+using the student's genuine writing, rather than retroactively weaken or
+replace these criteria.
+
 | Attack | Stage and mechanism |
 |---|---|
 | EV02 | **Signal one and signal two:** rare narrative choices have model score 0.1135; irregular sentence lengths (spread 0.8716) and high word variety (0.9423) give style 0.1506. Both heuristics mistake an AI-authored imitation for human-like surface patterns. Their 0.1321 mean is below the human boundary. |
@@ -523,6 +543,21 @@ the combining/label rules converted weak evidence into a human-like label.
 The CSV and returned signal scores rule out an empty-string route bypass;
 the feature comparison isolates the large model-score drop, followed by the
 documented equal-weight mean and human boundary.
+
+### One improvement selected from the diagnosis
+
+Change only `config.py::HUMAN_THRESHOLD` from **0.35 to 0.20**. Leave the model,
+style calculations, 0.50/0.50 weights, 0.50 disagreement guard, AI boundary
+0.65, input validation, rate limits, and local attack inputs unchanged.
+This widens the unsure band on the human side; it is not a claim that the
+remaining low-score evasions become detectable. Before applying it, the
+prediction is that EV04 (0.3328) and PI01 (0.3120) move from `human` to `unsure`,
+while EV02 (0.1321) and EV05 (0.0842) remain broken.
+
+Cost: genuine human writing scoring between 0.20 and 0.35 would now receive
+uncertainty and may need review. Because this local set has no genuine human
+writing, the size of that cost cannot be measured here. Merely preventing a
+human-label objective must not be described as correctly detecting AI.
 
 ## What's Still Broken
 
