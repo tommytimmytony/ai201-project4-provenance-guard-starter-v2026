@@ -25,6 +25,7 @@ import argparse
 import datetime as dt
 import json
 import sys
+import time
 from pathlib import Path
 
 import config
@@ -111,7 +112,25 @@ def main():
         print(f"\n{scenario['name']}  (criterion {scenario.get('criterion') or '—'})")
 
         trials = []
+        checks = []
+        if scenario.get("pause_before"):
+            print(f"  Waiting {scenario['pause_before']}s for the shared-IP limiter window.")
+            time.sleep(scenario["pause_before"])
         for trial in range(1, args.trials + 1):
+            if trial > 1 and scenario.get("pause_between_trials"):
+                time.sleep(scenario["pause_between_trials"])
+            if callable(scenario.get("run")):
+                try:
+                    check = scenario["run"](args.url, trial, args.timeout)
+                except (requests.RequestException, KeyError, TypeError) as exc:
+                    check = {
+                        "measurement": "ERROR", "met": False, "records": [],
+                        "error": f"{type(exc).__name__}: {exc}",
+                    }
+                trials.append(check["records"])
+                checks.append(check)
+                print(f"  trial {trial}: {check['measurement']} {'MET' if check['met'] else 'MISSED'}")
+                continue
             results = []
             for i, body in enumerate(bodies_for(scenario), 1):
                 preview = describe(body)
@@ -125,6 +144,8 @@ def main():
                         "confidence": payload.get("confidence"),
                         "model_score": payload.get("model_score"),
                         "style_score": payload.get("style_score"),
+                        "combined_score": payload.get("combined_score"),
+                        "content_id": payload.get("content_id"),
                         "label": payload.get("label"),
                         "sent": preview,
                     })
@@ -136,14 +157,14 @@ def main():
             guesses = [r.get("guess") or "—" for r in results]
             print(f"  trial {trial}: {', '.join(guesses)}")
 
-        rows.append({"scenario": scenario, "trials": trials})
+        rows.append({"scenario": scenario, "trials": trials, "checks": checks})
 
     write_report(rows, args)
 
 
 def write_report(rows, args):
     config.RESULTS_DIR.mkdir(exist_ok=True)
-    stamp = dt.datetime.now().strftime("%Y-%m-%d_%H%M")
+    stamp = dt.datetime.now().strftime("%Y-%m-%d_%H%M%S_%f")
     label = f"_{args.label}" if args.label else ""
     path = config.RESULTS_DIR / f"run_{stamp}{label}.md"
 
@@ -158,8 +179,10 @@ def write_report(rows, args):
         "- Service: `app.py::submit` · scoring: `scoring.py::combine_signals`",
         f"- {n} trials per criterion · {dt.datetime.now().strftime('%Y-%m-%d %H:%M')}",
         "",
-        "Fill in Target from `criteria.md`, and Run and Verdict from the output",
-        "underneath. Whether a trial passed depends on the criterion you wrote.",
+        "Targets are unchanged from `criteria.md`. MET requires every trial to meet",
+        "its target. All calibration text is AI-authored, not human ground truth.",
+        "Invalid-input trials wait 65 seconds before and between trials so shared-IP",
+        "rate limiting does not replace the route errors this criterion measures.",
         "",
         f"| Criterion | Target | {headers} | Verdict |",
         f"|---|---|{divider}|---|",
@@ -169,7 +192,12 @@ def write_report(rows, args):
         scenario = row["scenario"]
         number = scenario.get("criterion")
         name = f"{number}. {scenario['name']}" if number else scenario["name"]
-        lines.append(f"| {name} |  | {' | '.join([' '] * n)} |  |")
+        if row["checks"]:
+            measurements = " | ".join(str(check["measurement"]) for check in row["checks"])
+            verdict = "MET" if all(check["met"] for check in row["checks"]) else "MISSED"
+            lines.append(f"| {name} | {scenario['target']} | {measurements} | {verdict} |")
+        else:
+            lines.append(f"| {name} |  | {' | '.join([' '] * n)} |  |")
 
     lines += ["", "---", "", "## What actually came back", "",
               "Real output. Paste the relevant parts into your README — the rubric",
@@ -178,11 +206,23 @@ def write_report(rows, args):
     for row in rows:
         scenario = row["scenario"]
         lines += [f"### {scenario['name']}", ""]
+        if callable(scenario.get("run")):
+            lines += [f"Check: `scenarios.py::{scenario['run'].__name__}`.", ""]
         for trial_number, results in enumerate(row["trials"], 1):
             lines += [f"**Trial {trial_number}**", "", "```json",
-                      json.dumps(results, indent=2), "```", ""]
+                      json.dumps(row["checks"][trial_number - 1] if row["checks"] else results, indent=2),
+                      "```", ""]
 
     path.write_text("\n".join(lines), encoding="utf-8")
+    path.with_suffix(".json").write_text(json.dumps({
+        "recorded_at": dt.datetime.now().astimezone().isoformat(),
+        "label": args.label,
+        "rows": [{
+            "scenario": {k: v for k, v in row["scenario"].items() if k != "run"},
+            "function": row["scenario"]["run"].__name__ if callable(row["scenario"].get("run")) else None,
+            "checks": row["checks"], "trials": row["trials"],
+        } for row in rows],
+    }, indent=2) + "\n", encoding="utf-8")
     print(f"\nWrote {path.relative_to(config.ROOT)}")
     print("Commit it. It's the evidence the test actually happened.")
 

@@ -223,6 +223,41 @@ class ServiceTests(unittest.TestCase):
             importlib.reload(config)
             importlib.reload(app)
 
+    def test_daily_limit_is_independent_of_minute_limit(self):
+        try:
+            with patch.object(config, "RATE_LIMITING_ENABLED", True), patch.object(
+                config, "RATE_LIMIT_PER_DAY", 3,
+            ):
+                importlib.reload(app)
+                client = app.app.test_client()
+                with patch.object(detector, "model_signal", return_value=0.5):
+                    statuses = [client.post("/submit", json={
+                        "text": "three valid words", "creator_id": "daily",
+                    }).status_code for _ in range(4)]
+                self.assertEqual(statuses, [200, 200, 200, 429])
+                self.assertEqual(audit.read_entries()[-1]["limit"], "3 per 1 day")
+        finally:
+            importlib.reload(app)
+
+    def test_unusable_creators_share_ip_limit_and_are_logged_safely(self):
+        try:
+            with patch.object(config, "RATE_LIMITING_ENABLED", True), patch.object(
+                config, "RATE_LIMIT_PER_MINUTE", 3,
+            ):
+                importlib.reload(app)
+                client = app.app.test_client()
+                statuses = [client.post("/submit", json=[]).status_code for _ in range(3)]
+                response = client.post("/submit", json={
+                    "text": "three valid words", "creator_id": ["invalid"],
+                })
+                self.assertEqual(statuses + [response.status_code], [400, 400, 400, 429])
+                entry = audit.read_entries()[-1]
+                self.assertEqual(entry["creator_id"], "unknown")
+                self.assertEqual(entry["route"], "/submit")
+                self.assertEqual(entry["reason"], "rate_limited")
+        finally:
+            importlib.reload(app)
+
 
 if __name__ == "__main__":
     unittest.main()

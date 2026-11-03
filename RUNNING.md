@@ -19,11 +19,53 @@ In a second terminal:
 .\.venv\Scripts\python.exe run_eval.py --label local
 ```
 
+`run_demo.py` is the earlier Unit 7 demonstration and assumes rate limiting
+is off (`AI201_RATE_LIMITS=0` on its server). For the current limiter-enabled
+milestones, use `run_eval.py` below instead.
 `run_demo.py` exercises real GPT-2 inference, all three labels, appeals, and
 invalid/oversized requests across three trials. It records JSON evidence in
 `results`. Its AI-authored passages are calibration cases, not an accuracy
 dataset. `test_service.py` is the offline regression suite and mocks inference.
 See the README for the endpoint contracts and scoring rule.
+
+## Unit 8 evaluation
+
+The limiter is now enabled by default at 10/minute and 200/day. Start the
+service with debug off; the evidence in this repository used loopback port
+5018 so it could not interfere with another project on port 5000:
+
+```powershell
+$env:AI201_DEBUG = "0"
+$env:AI201_RATE_LIMITS = "1"
+$env:PORT = "5018"
+.\.venv\Scripts\python.exe app.py
+```
+
+In another terminal:
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest test_service test_evaluation -v
+.\.venv\Scripts\python.exe run_attacks.py --flood 15 --creator fresh_flood --url http://127.0.0.1:5018 --timeout 300
+.\.venv\Scripts\python.exe run_attacks.py --set local_attacks --label before --url http://127.0.0.1:5018 --timeout 300
+.\.venv\Scripts\python.exe run_eval.py --label before --url http://127.0.0.1:5018 --timeout 300
+```
+
+`local_attacks` is AI-authored supplemental testing, NOT the required staff
+set. When the TF supplies the folder holding both attack CSVs, use that folder
+with `--set`. The recorded local results do not establish human false-positive
+performance.
+
+`scenarios.py` executes all five unchanged reference criteria, including
+appeals, all invalid-input variants, and both size limits. It waits 65 seconds
+before and between invalid-input trials so anonymous requests do not exhaust
+their shared IP quota and replace the route statuses being measured. Do not
+send other requests to the same service during an evaluation; the log checks
+compare the exact entries appended during each trial.
+
+Runners produce paired Markdown and JSON evidence with unique timestamps.
+For a controlled after run, restart the service to reset its in-memory
+limiter, warm GPT-2 with a separate creator, then run the identical commands
+with `--label after`. Do not clear the append-only audit history.
 
 This is a **web service**. It runs on your machine and you talk to it with
 `curl` from another terminal. If you've not built a backend before, that's

@@ -382,6 +382,148 @@ as stored, not local display time. Rejections intentionally have fewer fields.
 ]
 ```
 
+### Five criteria: baseline run log
+
+`criteria.md` is unchanged. This run uses the existing AI-drafted reference
+criteria; no independently chosen student targets or genuine human writing
+are claimed. `run_eval.py::main` executes the five checks in `scenarios.py`
+and records their real responses. Evidence:
+`results/run_2026-11-03_012959_637500_before.md` and its paired `.json`.
+
+| Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
+|---|---|---|---|---|---|
+| 1. Score spread | >= 0.30 | 0.8220 | 0.8220 | 0.8220 | MET |
+| 2. Label coverage | 3/3 labels; bounded scores | 3/3 | 3/3 | 3/3 | MET |
+| 3. Appeal traceability | 3/3 traceability checks | 3/3 | 3/3 | 3/3 | MET |
+| 4. Invalid input | 12/12 expected errors; all rejections logged | 12/12 | 12/12 | 12/12 | MET |
+| 5. Size limits | 3/3 expected errors; all rejections logged | 3/3 | 3/3 | 3/3 | MET |
+
+Criterion 4 waits 65 seconds before and between trials so unusable creator IDs
+do not exhaust the shared-IP quota. Otherwise a legitimate 429 could replace
+the 400/415/422 route behavior this particular target measures. The separate
+flood and local malformed set still measure rate-limit rejection behavior.
+All score measurements and outcomes repeated identically; UUIDs and timestamps
+are expected to differ. This demonstrates repeatability, not accuracy.
+
+**Criterion 1, trial 1:** `scenarios.py::score_spread` sends two submissions
+to `app.py::submit`; their combined scores differ by 0.8220.
+
+```json
+[
+  {"status":200,"response":{"combined_score":0.9541,"confidence":0.9082,"content_id":"bacd12ca-c2b2-4a2e-8af2-b43807a10207","guess":"ai","label":"Our checks found patterns that can appear in AI-generated writing. People can write this way too; you can request a review.","model_score":0.99,"status":"decided","style_score":0.9181}},
+  {"status":200,"response":{"combined_score":0.1321,"confidence":0.7358,"content_id":"53d82e35-3fd9-4928-a6b4-4cf75b53bd35","guess":"human","label":"This writing looks more like human writing to our checks. This is an estimate, not proof of who wrote it.","model_score":0.1135,"status":"decided","style_score":0.1506}}
+]
+```
+
+**Criterion 2, trial 1:** `scenarios.py::label_coverage` -> `app.py::submit`.
+
+```json
+[
+  {"status":200,"response":{"combined_score":0.9541,"confidence":0.9082,"content_id":"32c351d1-ac4d-4f6c-8d51-6bd3dfa7cfed","guess":"ai","label":"Our checks found patterns that can appear in AI-generated writing. People can write this way too; you can request a review.","model_score":0.99,"status":"decided","style_score":0.9181}},
+  {"status":200,"response":{"combined_score":0.1321,"confidence":0.7358,"content_id":"c8fb1521-c856-4801-a02b-ec689728a763","guess":"human","label":"This writing looks more like human writing to our checks. This is an estimate, not proof of who wrote it.","model_score":0.1135,"status":"decided","style_score":0.1506}},
+  {"status":200,"response":{"combined_score":0.4568,"confidence":0.0864,"content_id":"99702372-cb4f-4e88-9c38-e563e87f6a53","guess":"unsure","label":"Our checks cannot reliably tell how this was written. This is not an accusation; you can request a review.","model_score":0.2643,"status":"decided","style_score":0.6493}},
+  {"status":200,"response":{"combined_score":0.3328,"confidence":0.3344,"content_id":"4f8104a4-59a4-429f-a97c-7caf1af2fbc2","guess":"human","label":"This writing looks more like human writing to our checks. This is an estimate, not proof of who wrote it.","model_score":0.2661,"status":"decided","style_score":0.3996}}
+]
+```
+
+**Criterion 3, trial 1:** `scenarios.py::appeal_traceability` ->
+`app.py::appeal`. The report also preserves the matching original and appeal
+audit events, checks creator/reasoning equality, and verifies the original
+decision was not modified.
+
+```json
+[
+  {"status":200,"response":{"content_id":"db6f0484-c2f4-4464-87f1-a3a2e62886f2","message":"Your request for review has been recorded. No automatic reassessment has occurred.","status":"under_review"}},
+  {"status":404,"response":{"error":"content_not_found","message":"No submission has that content_id."}}
+]
+```
+
+**Criterion 4, trial 1:** `scenarios.py::invalid_input` ->
+`app.py::submit`, `app.py::json_object`, and `app.py::reject`. All twelve
+requests produced these actual status/response records and twelve rejection
+entries, with no new decision.
+
+```json
+[
+  {"status":400,"response":{"error":"invalid_text","message":"text must be a nonblank string."}},
+  {"status":400,"response":{"error":"invalid_text","message":"text must be a nonblank string."}},
+  {"status":400,"response":{"error":"invalid_text","message":"text must be a nonblank string."}},
+  {"status":400,"response":{"error":"invalid_text","message":"text must be a nonblank string."}},
+  {"status":400,"response":{"error":"invalid_text","message":"text must be a nonblank string."}},
+  {"status":400,"response":{"error":"invalid_creator_id","message":"creator_id must be a nonblank string of at most 100 characters."}},
+  {"status":400,"response":{"error":"invalid_json","message":"Send a valid JSON object."}},
+  {"status":400,"response":{"error":"invalid_json","message":"Send a valid JSON object."}},
+  {"status":400,"response":{"error":"invalid_json","message":"Send a valid JSON object."}},
+  {"status":400,"response":{"error":"invalid_json","message":"Send a valid JSON object."}},
+  {"status":415,"response":{"error":"unsupported_media_type","message":"Send Content-Type: application/json."}},
+  {"status":422,"response":{"error":"text_too_short","message":"Provide at least three words."}}
+]
+```
+
+**Criterion 5, trial 1:** `scenarios.py::size_limits` ->
+`app.py::submit`, `app.py::request_too_large`, and `app.py::appeal`.
+All three are logged rejections; none is a decision or appeal.
+
+```json
+[
+  {"status":413,"response":{"error":"text_too_long","message":"text must not exceed 10000 characters."}},
+  {"status":413,"response":{"error":"request_too_large","message":"The request body exceeds 65536 bytes."}},
+  {"status":400,"response":{"error":"invalid_reasoning","message":"reasoning must be a nonblank string of at most 2000 characters."}}
+]
+```
+
+### Diagnosis of every broken local attack
+
+These are AI-assisted diagnoses grounded in the recorded scores and the
+actual functions, not a claimed independent student's analysis.
+
+| Attack | Stage and mechanism |
+|---|---|
+| EV02 | **Signal one and signal two:** rare narrative choices have model score 0.1135; irregular sentence lengths (spread 0.8716) and high word variety (0.9423) give style 0.1506. Both heuristics mistake an AI-authored imitation for human-like surface patterns. Their 0.1321 mean is below the human boundary. |
+| EV04 | **Combining rule and label mapping:** model 0.2661 and style 0.3996 average to 0.3328. Their disagreement is only 0.1335, so the 0.50 disagreement guard does not apply; the original human boundary 0.35 grants a human-like label to this AI-authored conversational passage. |
+| EV05 | **Signal one, with signal two unable to rescue it:** deliberate misspellings make the prose much less predictable, dropping model score from EV02's 0.1135 to 0.0107. Sentence spread and type-token ratio remain exactly 0.8716 and 0.9423; contrary to a tempting explanation, these edits did NOT increase measured word variety. Style rises slightly to 0.1578 as punctuation becomes less dense, but the mean still falls to 0.0842. |
+| PI01 | **Signal one, combining rule, and label mapping:** instruction-shaped prose scores 0.1665 model and 0.4575 style; the mean 0.3120 falls in the original human band. GPT-2 is evaluated for next-token loss; it does not follow these instructions or select the returned label. This is a heuristic evasion, not evidence that the service obeyed a prompt injection. |
+
+**Pattern:** all four are accepted AI-authored inputs in the human band.
+The route correctly accepts valid strings; authorship is not encoded in
+surface predictability or style. EV04 and PI01 sit near the original human
+boundary, while EV02 and EV05 are deep inside it. A threshold change can
+address the former two without pretending it solves the latter two.
+
+**Worst local failure: EV05.** This is the smallest AI-like score and
+therefore the strongest misleading human-like estimate among this local set.
+There is no human false-positive attack here, so this is not a measured worst
+outcome for a real writer accused of AI use.
+
+Input from `local_attacks/attacks.csv`:
+
+```text
+Stopp! I lugged my dentted kettlle uphill, past briarrs, shouting: 'Why todai?' Noboddy answered; duskk bruised the riddge. Fine. We campped beside a crookked fence, countted twelve motths, and forgott the tea. My left boott squeaked. Somewhere below us, a tracttor coughed twice; Mara insisted it sounded like her grandfatther's accordionn.
+```
+
+Actual `/submit` response:
+
+```json
+{
+  "combined_score": 0.0842,
+  "confidence": 0.8316,
+  "content_id": "70606c08-e4de-4426-9893-af2f722adaf3",
+  "guess": "human",
+  "label": "This writing looks more like human writing to our checks. This is an estimate, not proof of who wrote it.",
+  "model_score": 0.0107,
+  "status": "decided",
+  "style_score": 0.1578
+}
+```
+
+The confidence is score extremity, not an 83% probability of human authorship.
+Three candidate explanations at different stages were: the route accidentally
+sent a truncated or empty string; typo-induced rarity reduced the model score;
+the combining/label rules converted weak evidence into a human-like label.
+The CSV and returned signal scores rule out an empty-string route bypass;
+the feature comparison isolates the large model-score drop, followed by the
+documented equal-weight mean and human boundary.
+
 ## What's Still Broken
 
 AI can imitate irregular writing, while people can write predictable prose.
