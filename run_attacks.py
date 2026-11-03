@@ -383,7 +383,7 @@ def run_flood(args):
               "GET /health tells you which.")
 
     config.RESULTS_DIR.mkdir(exist_ok=True)
-    stamp = dt.datetime.now().strftime("%Y-%m-%d_%H%M")
+    stamp = dt.datetime.now().strftime("%Y-%m-%d_%H%M%S_%f")
     path = config.RESULTS_DIR / f"flood_{stamp}.md"
     path.write_text(
         f"# Rate limit check\n\n"

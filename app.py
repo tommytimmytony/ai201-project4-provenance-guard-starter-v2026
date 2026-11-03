@@ -72,11 +72,7 @@ def internal_error(exc):
 
 
 # ── Rate limiting — UNIT 8 ────────────────────────────────────────────────────
-# Off until you turn it on. In unit 8, Milestone 1:
-#
-#   1. Set RATE_LIMITING_ENABLED = True in config.py (or AI201_RATE_LIMITS=1)
-#   2. Choose your numbers there
-#   The @limiter.limit(...) line on /submit is already enabled.
+# Enabled by default for unit 8. Limits are configured in config.py.
 #
 # While limiting is off, the decorator is a no-op. It produces no 429
 # responses until limiting is enabled.
@@ -139,9 +135,12 @@ if config.RATE_LIMITING_ENABLED:
         payload = request.get_json(silent=True)
         if not isinstance(payload, dict):
             payload = {}
+        creator = payload.get("creator_id")
+        creator = creator.strip() if isinstance(creator, str) and creator.strip() else "unknown"
         audit.log_rejection(
-            creator_id=payload.get("creator_id", "unknown"),
+            creator_id=creator[:config.MAX_CREATOR_ID_CHARS],
             reason="rate_limited",
+            route=request.path,
             limit=str(exc.description),
         )
         return jsonify({

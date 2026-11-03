@@ -290,15 +290,38 @@ Unit 8 attack exercise is complete.
 
 ## Rate Limiting
 
-Optional, off by default for Unit 7. Set `$env:AI201_RATE_LIMITS = "1"` before
-starting the server to enable **10/minute and 200/day** on `/submit`.
-These demonstration limits allow occasional drafting while throttling repeated
-probing from one claimed creator. The key uses trimmed `creator_id` with an
-IP fallback; it is not authenticated and can be rotated. Storage is in memory.
+Enabled by default: **10/minute and 200/day** on `/submit`. A writer can submit
+a draft and several revisions without being blocked; a thousand same-creator
+threshold probes cannot all be accepted. The day limit also bounds sustained
+probing. The key uses trimmed `creator_id` with an IP fallback; it is not
+authenticated and can be rotated. Storage is in memory, so restarts erase
+counts and multiple processes do not share them. `AI201_RATE_LIMITS=0` is an
+explicit opt-out for a local demo, not the tested configuration.
 
-The offline regression test checks 10 successful requests followed by five
-429 responses and matching rejection entries. A live Unit 8 flood run has not
-been recorded; do not present the mocked test as that evidence.
+**Milestone 1, November 3, 2026:** real GPT-2 HTTP flood on loopback port 5018:
+
+```powershell
+.\.venv\Scripts\python.exe run_attacks.py --flood 15 --creator flood_milestone1_warm --url http://127.0.0.1:5018 --timeout 300
+```
+
+```text
+200 200 200 200 200 200 200 200 200 200 429 429 429 429 429
+```
+
+Evidence: `results/flood_2026-11-03_0122.md` and
+`results/milestone1_audit.json`. The first, cold-model attempt admitted eleven
+requests because model loading crossed a fixed-window expiry; it still produced
+four 429s. The warm run above admitted ten and logged all five rejections.
+This is a per-window limit, not a promise of exactly ten successes in every
+fifteen-request run regardless of elapsed time.
+
+Three additional submissions were read back through `GET /log` and matched
+their returned IDs, labels, status, and both signal and combined scores.
+Every decision contains `timestamp`, `content_id`, `creator_id`, `guess`,
+`model_score`, `style_score`, `combined_score`, `label`, and `status`.
+A missing-text request returned 400 and left an `invalid_text` rejection.
+The offline suite also passes all 15 tests; mocks are separate from this live
+evidence.
 
 ## Attack Run - Before / The Improvement / Attack Run - After
 

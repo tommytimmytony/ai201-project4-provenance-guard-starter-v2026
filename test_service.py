@@ -74,6 +74,9 @@ class ServiceTests(unittest.TestCase):
             patcher = patch.object(config, name, value)
             patcher.start()
             self.addCleanup(patcher.stop)
+        patcher = patch.object(app.limiter, "enabled", False)
+        patcher.start()
+        self.addCleanup(patcher.stop)
         self.client = app.app.test_client()
 
     def submit(self):
@@ -94,6 +97,13 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(entry["content_id"], body["content_id"])
         self.assertEqual(entry["creator_id"], "writer")
         self.assertEqual(entry["combined_score"], body["combined_score"])
+        required = {
+            "timestamp", "content_id", "creator_id", "guess", "model_score",
+            "style_score", "combined_score", "label", "status",
+        }
+        self.assertTrue(required <= entry.keys())
+        self.assertEqual(entry["model_score"], body["model_score"])
+        self.assertEqual(entry["style_score"], body["style_score"])
         log = self.client.get("/log?limit=1").get_json()
         self.assertEqual(log["entries"], [entry])
 
@@ -200,6 +210,15 @@ class ServiceTests(unittest.TestCase):
                     ]
                 self.assertEqual(statuses, [200] * 10 + [429] * 5)
                 self.assertEqual(sum(e.get("reason") == "rate_limited" for e in audit.read_entries()), 5)
+                self.assertTrue(all(
+                    e["route"] == "/submit" and e["creator_id"] == "flood"
+                    for e in audit.read_entries() if e.get("reason") == "rate_limited"
+                ))
+                self.assertTrue(client.get("/health").get_json()["rate_limiting"])
+                with patch.object(detector, "model_signal", return_value=0.5):
+                    self.assertEqual(client.post("/submit", json={
+                        "text": "three valid words", "creator_id": "other-writer",
+                    }).status_code, 200)
         finally:
             importlib.reload(config)
             importlib.reload(app)

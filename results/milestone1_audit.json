@@ -1,0 +1,264 @@
+{
+  "recorded_at": "2026-11-03T09:22:47.512411+00:00",
+  "health": {
+    "detector_loaded": true,
+    "detector_model": "gpt2",
+    "log_entries": 132,
+    "ok": true,
+    "rate_limiting": true
+  },
+  "submissions": [
+    {
+      "status": 200,
+      "response": {
+        "combined_score": 0.9541,
+        "confidence": 0.9082,
+        "content_id": "02d4f902-bf83-42ed-bb10-854599454ec5",
+        "guess": "ai",
+        "label": "Our checks found patterns that can appear in AI-generated writing. People can write this way too; you can request a review.",
+        "model_score": 0.99,
+        "status": "decided",
+        "style_score": 0.9181
+      }
+    },
+    {
+      "status": 200,
+      "response": {
+        "combined_score": 0.1321,
+        "confidence": 0.7358,
+        "content_id": "2d364e69-f8b3-4ca3-b375-e7222af239da",
+        "guess": "human",
+        "label": "This writing looks more like human writing to our checks. This is an estimate, not proof of who wrote it.",
+        "model_score": 0.1135,
+        "status": "decided",
+        "style_score": 0.1506
+      }
+    },
+    {
+      "status": 200,
+      "response": {
+        "combined_score": 0.4568,
+        "confidence": 0.0864,
+        "content_id": "e22e7b38-11b0-4060-bab2-3feb895ec1a5",
+        "guess": "unsure",
+        "label": "Our checks cannot reliably tell how this was written. This is not an accusation; you can request a review.",
+        "model_score": 0.2643,
+        "status": "decided",
+        "style_score": 0.6493
+      }
+    }
+  ],
+  "log_entries": [
+    {
+      "combined_score": 0.9541,
+      "confidence": 0.9082,
+      "content_id": "02d4f902-bf83-42ed-bb10-854599454ec5",
+      "creator_id": "milestone1_case_0",
+      "guess": "ai",
+      "label": "Our checks found patterns that can appear in AI-generated writing. People can write this way too; you can request a review.",
+      "model_score": 0.99,
+      "status": "decided",
+      "style_score": 0.9181,
+      "timestamp": "2026-11-03T09:22:46+00:00"
+    },
+    {
+      "combined_score": 0.1321,
+      "confidence": 0.7358,
+      "content_id": "2d364e69-f8b3-4ca3-b375-e7222af239da",
+      "creator_id": "milestone1_case_1",
+      "guess": "human",
+      "label": "This writing looks more like human writing to our checks. This is an estimate, not proof of who wrote it.",
+      "model_score": 0.1135,
+      "status": "decided",
+      "style_score": 0.1506,
+      "timestamp": "2026-11-03T09:22:47+00:00"
+    },
+    {
+      "combined_score": 0.4568,
+      "confidence": 0.0864,
+      "content_id": "e22e7b38-11b0-4060-bab2-3feb895ec1a5",
+      "creator_id": "milestone1_case_2",
+      "guess": "unsure",
+      "label": "Our checks cannot reliably tell how this was written. This is not an accusation; you can request a review.",
+      "model_score": 0.2643,
+      "status": "decided",
+      "style_score": 0.6493,
+      "timestamp": "2026-11-03T09:22:47+00:00"
+    },
+    {
+      "creator_id": "milestone1_missing_text",
+      "event": "rejected",
+      "reason": "invalid_text",
+      "route": "/submit",
+      "status": "rejected",
+      "timestamp": "2026-11-03T09:22:47+00:00"
+    }
+  ],
+  "flood_entries": [
+    {
+      "combined_score": 0.275,
+      "confidence": 0.45,
+      "content_id": "f89a4ee8-3301-4a3a-b0af-6c9196489baf",
+      "creator_id": "flood_milestone1_warm",
+      "guess": "human",
+      "label": "This writing looks more like human writing to our checks. This is an estimate, not proof of who wrote it.",
+      "model_score": 0.2587,
+      "status": "decided",
+      "style_score": 0.2913,
+      "timestamp": "2026-11-03T09:22:41+00:00"
+    },
+    {
+      "combined_score": 0.275,
+      "confidence": 0.45,
+      "content_id": "525d1263-4380-4b20-b3cb-900f9648a725",
+      "creator_id": "flood_milestone1_warm",
+      "guess": "human",
+      "label": "This writing looks more like human writing to our checks. This is an estimate, not proof of who wrote it.",
+      "model_score": 0.2587,
+      "status": "decided",
+      "style_score": 0.2913,
+      "timestamp": "2026-11-03T09:22:42+00:00"
+    },
+    {
+      "combined_score": 0.275,
+      "confidence": 0.45,
+      "content_id": "50be88ca-2659-4e7d-8328-509046e4a8cd",
+      "creator_id": "flood_milestone1_warm",
+      "guess": "human",
+      "label": "This writing looks more like human writing to our checks. This is an estimate, not proof of who wrote it.",
+      "model_score": 0.2587,
+      "status": "decided",
+      "style_score": 0.2913,
+      "timestamp": "2026-11-03T09:22:42+00:00"
+    },
+    {
+      "combined_score": 0.275,
+      "confidence": 0.45,
+      "content_id": "3741df05-e903-4984-8b4a-82109f8620c5",
+      "creator_id": "flood_milestone1_warm",
+      "guess": "human",
+      "label": "This writing looks more like human writing to our checks. This is an estimate, not proof of who wrote it.",
+      "model_score": 0.2587,
+      "status": "decided",
+      "style_score": 0.2913,
+      "timestamp": "2026-11-03T09:22:42+00:00"
+    },
+    {
+      "combined_score": 0.275,
+      "confidence": 0.45,
+      "content_id": "5516e455-b08b-477f-a8c0-4eb3faa63761",
+      "creator_id": "flood_milestone1_warm",
+      "guess": "human",
+      "label": "This writing looks more like human writing to our checks. This is an estimate, not proof of who wrote it.",
+      "model_score": 0.2587,
+      "status": "decided",
+      "style_score": 0.2913,
+      "timestamp": "2026-11-03T09:22:42+00:00"
+    },
+    {
+      "combined_score": 0.275,
+      "confidence": 0.45,
+      "content_id": "3d64627a-1060-495f-8b0d-1efde05886c2",
+      "creator_id": "flood_milestone1_warm",
+      "guess": "human",
+      "label": "This writing looks more like human writing to our checks. This is an estimate, not proof of who wrote it.",
+      "model_score": 0.2587,
+      "status": "decided",
+      "style_score": 0.2913,
+      "timestamp": "2026-11-03T09:22:42+00:00"
+    },
+    {
+      "combined_score": 0.275,
+      "confidence": 0.45,
+      "content_id": "28d6561c-17d4-4519-b55f-e5d98e53500b",
+      "creator_id": "flood_milestone1_warm",
+      "guess": "human",
+      "label": "This writing looks more like human writing to our checks. This is an estimate, not proof of who wrote it.",
+      "model_score": 0.2587,
+      "status": "decided",
+      "style_score": 0.2913,
+      "timestamp": "2026-11-03T09:22:42+00:00"
+    },
+    {
+      "combined_score": 0.275,
+      "confidence": 0.45,
+      "content_id": "ba90fed1-5425-4d90-b760-6874ebfe2f07",
+      "creator_id": "flood_milestone1_warm",
+      "guess": "human",
+      "label": "This writing looks more like human writing to our checks. This is an estimate, not proof of who wrote it.",
+      "model_score": 0.2587,
+      "status": "decided",
+      "style_score": 0.2913,
+      "timestamp": "2026-11-03T09:22:42+00:00"
+    },
+    {
+      "combined_score": 0.275,
+      "confidence": 0.45,
+      "content_id": "6872ca99-3a17-4586-ac2d-ed4c59fad69d",
+      "creator_id": "flood_milestone1_warm",
+      "guess": "human",
+      "label": "This writing looks more like human writing to our checks. This is an estimate, not proof of who wrote it.",
+      "model_score": 0.2587,
+      "status": "decided",
+      "style_score": 0.2913,
+      "timestamp": "2026-11-03T09:22:43+00:00"
+    },
+    {
+      "combined_score": 0.275,
+      "confidence": 0.45,
+      "content_id": "2c16b52c-58ed-466d-a7d2-0331375ff9d1",
+      "creator_id": "flood_milestone1_warm",
+      "guess": "human",
+      "label": "This writing looks more like human writing to our checks. This is an estimate, not proof of who wrote it.",
+      "model_score": 0.2587,
+      "status": "decided",
+      "style_score": 0.2913,
+      "timestamp": "2026-11-03T09:22:43+00:00"
+    },
+    {
+      "creator_id": "flood_milestone1_warm",
+      "event": "rejected",
+      "limit": "10 per 1 minute",
+      "reason": "rate_limited",
+      "route": "/submit",
+      "status": "rejected",
+      "timestamp": "2026-11-03T09:22:43+00:00"
+    },
+    {
+      "creator_id": "flood_milestone1_warm",
+      "event": "rejected",
+      "limit": "10 per 1 minute",
+      "reason": "rate_limited",
+      "route": "/submit",
+      "status": "rejected",
+      "timestamp": "2026-11-03T09:22:43+00:00"
+    },
+    {
+      "creator_id": "flood_milestone1_warm",
+      "event": "rejected",
+      "limit": "10 per 1 minute",
+      "reason": "rate_limited",
+      "route": "/submit",
+      "status": "rejected",
+      "timestamp": "2026-11-03T09:22:43+00:00"
+    },
+    {
+      "creator_id": "flood_milestone1_warm",
+      "event": "rejected",
+      "limit": "10 per 1 minute",
+      "reason": "rate_limited",
+      "route": "/submit",
+      "status": "rejected",
+      "timestamp": "2026-11-03T09:22:43+00:00"
+    },
+    {
+      "creator_id": "flood_milestone1_warm",
+      "event": "rejected",
+      "limit": "10 per 1 minute",
+      "reason": "rate_limited",
+      "route": "/submit",
+      "status": "rejected",
+      "timestamp": "2026-11-03T09:22:43+00:00"
+    }
+  ]
+}
