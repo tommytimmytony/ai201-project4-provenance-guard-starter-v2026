@@ -325,9 +325,62 @@ evidence.
 
 ## Attack Run - Before / The Improvement / Attack Run - After
 
-The course attack set was not supplied. No full attack run or before/after
-improvement experiment is claimed. The implementation and runners are ready
-for that separate Unit 8 exercise.
+**Staff-set blocker:** neither `attacks.csv` nor
+`attacks_malformed_requests.csv` was supplied in the project or nearby course
+folders, and no relevant download archive was found. The staff attack exercise
+cannot be claimed complete. `local_attacks/` is explicitly AI-authored
+supplemental testing, not a renamed or reconstructed staff set. It contains
+29 cases and no genuine human-authored false-positive examples.
+
+### Supplemental attack baseline
+
+```powershell
+.\.venv\Scripts\python.exe run_attacks.py --set local_attacks --label before --url http://127.0.0.1:5018 --timeout 300
+```
+
+Raw evidence: `results/attack_run_2026-11-03_012447_091516_before.json`.
+Judged outcomes for **every** input: `results/local_verdicts_before.json`.
+Whole-run audit: `results/local_audit_before.json`, also present in the
+append-only `logs/audit.jsonl`.
+
+| ID | Objective | Model | Style | Combined | Guess | Verdict |
+|---|---|---|---|---|---|---|
+| EV01 | AI-authored text receives human label | 0.9919 | 0.9181 | 0.9550 | ai | HELD |
+| EV02 | AI-authored narrative receives human label | 0.1135 | 0.1506 | 0.1321 | human | BROKE |
+| EV03 | AI-authored formal text receives human label | 0.2643 | 0.6493 | 0.4568 | unsure | HELD |
+| EV04 | AI-authored conversational text receives human label | 0.2661 | 0.3996 | 0.3328 | human | BROKE |
+| EV05 | Typo-edited AI narrative receives human label | 0.0107 | 0.1578 | 0.0842 | human | BROKE |
+| PI01 | Instructions make text receive human label | 0.1665 | 0.4575 | 0.3120 | human | BROKE |
+
+Total: **25 HELD, 4 BROKE**. MD01-MD08 were rejected and logged; FD01-FD10
+used the allowed ten requests and FD11-FD15 returned logged 429s. All 29
+requests have an outcome and a judgment in the verdict file. The flood's
+audit timestamps span two seconds. A normal allowed flood request is not a
+bypass; the objective was acceptance beyond the configured allowance.
+MD03's `json=None` is sent by Requests without a JSON body/content type, so
+it exercised a 415 media rejection rather than literal JSON null. The
+criterion runner separately sends literal `null` and checks 400.
+
+### Ten real baseline audit entries
+
+These include all four broken attacks, contrasting successful decisions,
+route rejections, and two limiter rejections. Decision timestamps are UTC
+as stored, not local display time. Rejections intentionally have fewer fields.
+
+```json
+[
+  {"timestamp":"2026-11-03T09:24:44+00:00","content_id":"4ce40d8e-ba05-4444-b8f2-e40e0d8ffd28","creator_id":"attacker_EV01","guess":"ai","model_score":0.9919,"style_score":0.9181,"combined_score":0.955,"label":"Our checks found patterns that can appear in AI-generated writing. People can write this way too; you can request a review.","status":"decided","confidence":0.91},
+  {"timestamp":"2026-11-03T09:24:44+00:00","content_id":"144e1be2-8774-471a-b68c-1eb59559d1cf","creator_id":"attacker_EV02","guess":"human","model_score":0.1135,"style_score":0.1506,"combined_score":0.1321,"label":"This writing looks more like human writing to our checks. This is an estimate, not proof of who wrote it.","status":"decided","confidence":0.7358},
+  {"timestamp":"2026-11-03T09:24:44+00:00","content_id":"7ab9d5dc-2995-4da2-a408-44adcb0e97ce","creator_id":"attacker_EV03","guess":"unsure","model_score":0.2643,"style_score":0.6493,"combined_score":0.4568,"label":"Our checks cannot reliably tell how this was written. This is not an accusation; you can request a review.","status":"decided","confidence":0.0864},
+  {"timestamp":"2026-11-03T09:24:44+00:00","content_id":"8adf1156-d872-4056-b3fc-be55a0612f90","creator_id":"attacker_EV04","guess":"human","model_score":0.2661,"style_score":0.3996,"combined_score":0.3328,"label":"This writing looks more like human writing to our checks. This is an estimate, not proof of who wrote it.","status":"decided","confidence":0.3344},
+  {"timestamp":"2026-11-03T09:24:45+00:00","content_id":"70606c08-e4de-4426-9893-af2f722adaf3","creator_id":"attacker_EV05","guess":"human","model_score":0.0107,"style_score":0.1578,"combined_score":0.0842,"label":"This writing looks more like human writing to our checks. This is an estimate, not proof of who wrote it.","status":"decided","confidence":0.8316},
+  {"timestamp":"2026-11-03T09:24:45+00:00","content_id":"9ee4186d-c882-4a96-bdad-27148979bfd1","creator_id":"attacker_PI01","guess":"human","model_score":0.1665,"style_score":0.4575,"combined_score":0.312,"label":"This writing looks more like human writing to our checks. This is an estimate, not proof of who wrote it.","status":"decided","confidence":0.376},
+  {"timestamp":"2026-11-03T09:24:45+00:00","creator_id":"local_missing","event":"rejected","status":"rejected","reason":"invalid_text","route":"/submit"},
+  {"timestamp":"2026-11-03T09:24:45+00:00","creator_id":"local_short","event":"rejected","status":"rejected","reason":"text_too_short","route":"/submit"},
+  {"timestamp":"2026-11-03T09:24:46+00:00","creator_id":"local_flood_creator","event":"rejected","status":"rejected","reason":"rate_limited","route":"/submit","limit":"10 per 1 minute"},
+  {"timestamp":"2026-11-03T09:24:47+00:00","creator_id":"local_flood_creator","event":"rejected","status":"rejected","reason":"rate_limited","route":"/submit","limit":"10 per 1 minute"}
+]
+```
 
 ## What's Still Broken
 

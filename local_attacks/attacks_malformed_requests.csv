@@ -1,0 +1,24 @@
+id,family,targets,raw_body,send_as,content_type
+MD01,malformed,Obtain a successful decision for missing text,"{""creator_id"":""local_missing""}",json,application/json
+MD02,malformed,Obtain a successful decision for non-object JSON,[],json,application/json
+MD03,malformed,Obtain a successful decision for null JSON,null,json,application/json
+MD04,malformed,Obtain a successful decision for non-string creator,"{""text"":""three valid words"",""creator_id"":123}",json,application/json
+MD05,malformed,Obtain a successful decision for empty text,"{""text"":"""",""creator_id"":""local_empty""}",json,application/json
+MD06,malformed,Obtain a successful decision for malformed JSON,{,raw,application/json
+MD07,malformed,Obtain a successful decision for non-JSON media,not JSON,raw,text/plain
+MD08,malformed,Obtain a successful decision for short text,"{""text"":""hi"",""creator_id"":""local_short""}",json,application/json
+FD01,flood_same_creator,Exceed ten accepted submissions in one minute,"{""text"":""three valid words"",""creator_id"":""local_flood_creator""}",json,application/json
+FD02,flood_same_creator,Exceed ten accepted submissions in one minute,"{""text"":""three valid words"",""creator_id"":""local_flood_creator""}",json,application/json
+FD03,flood_same_creator,Exceed ten accepted submissions in one minute,"{""text"":""three valid words"",""creator_id"":""local_flood_creator""}",json,application/json
+FD04,flood_same_creator,Exceed ten accepted submissions in one minute,"{""text"":""three valid words"",""creator_id"":""local_flood_creator""}",json,application/json
+FD05,flood_same_creator,Exceed ten accepted submissions in one minute,"{""text"":""three valid words"",""creator_id"":""local_flood_creator""}",json,application/json
+FD06,flood_same_creator,Exceed ten accepted submissions in one minute,"{""text"":""three valid words"",""creator_id"":""local_flood_creator""}",json,application/json
+FD07,flood_same_creator,Exceed ten accepted submissions in one minute,"{""text"":""three valid words"",""creator_id"":""local_flood_creator""}",json,application/json
+FD08,flood_same_creator,Exceed ten accepted submissions in one minute,"{""text"":""three valid words"",""creator_id"":""local_flood_creator""}",json,application/json
+FD09,flood_same_creator,Exceed ten accepted submissions in one minute,"{""text"":""three valid words"",""creator_id"":""local_flood_creator""}",json,application/json
+FD10,flood_same_creator,Exceed ten accepted submissions in one minute,"{""text"":""three valid words"",""creator_id"":""local_flood_creator""}",json,application/json
+FD11,flood_same_creator,Exceed ten accepted submissions in one minute,"{""text"":""three valid words"",""creator_id"":""local_flood_creator""}",json,application/json
+FD12,flood_same_creator,Exceed ten accepted submissions in one minute,"{""text"":""three valid words"",""creator_id"":""local_flood_creator""}",json,application/json
+FD13,flood_same_creator,Exceed ten accepted submissions in one minute,"{""text"":""three valid words"",""creator_id"":""local_flood_creator""}",json,application/json
+FD14,flood_same_creator,Exceed ten accepted submissions in one minute,"{""text"":""three valid words"",""creator_id"":""local_flood_creator""}",json,application/json
+FD15,flood_same_creator,Exceed ten accepted submissions in one minute,"{""text"":""three valid words"",""creator_id"":""local_flood_creator""}",json,application/json

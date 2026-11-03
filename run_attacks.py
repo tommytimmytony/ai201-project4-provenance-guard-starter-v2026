@@ -489,7 +489,9 @@ def main():
             "confidence": payload.get("confidence"),
             "model_score": payload.get("model_score"),
             "style_score": payload.get("style_score"),
+            "combined_score": payload.get("combined_score"),
             "label": payload.get("label"),
+            "response": payload,
             "error": error,
             "verdict": verdict,
             "note": note,
@@ -505,7 +507,7 @@ def main():
 
 def write_report(rows, args):
     config.RESULTS_DIR.mkdir(exist_ok=True)
-    stamp = dt.datetime.now().strftime("%Y-%m-%d_%H%M")
+    stamp = dt.datetime.now().strftime("%Y-%m-%d_%H%M%S_%f")
     label = f"_{args.label}" if args.label else ""
     path = config.RESULTS_DIR / f"attack_run_{stamp}{label}.md"
 
@@ -534,7 +536,7 @@ def write_report(rows, args):
     ]
 
     for row in rows:
-        score = row["confidence"]
+        score = row["combined_score"]
         score_text = f"{score:.3f}" if isinstance(score, (int, float)) else "—"
         targets = row["targets"].replace("|", "\\|")
         lines.append(
@@ -582,6 +584,12 @@ def write_report(rows, args):
         ]
 
     path.write_text("\n".join(lines), encoding="utf-8")
+    path.with_suffix(".json").write_text(json.dumps({
+        "recorded_at": dt.datetime.now().astimezone().isoformat(),
+        "label": args.label,
+        "source_folder": str(args.folder),
+        "rows": rows,
+    }, indent=2) + "\n", encoding="utf-8")
 
     print(f"\n{'=' * 60}")
     print(f"Wrote {path.relative_to(config.ROOT)}")
