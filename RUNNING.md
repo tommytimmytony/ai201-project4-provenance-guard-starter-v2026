@@ -9,6 +9,7 @@ From PowerShell in this project directory:
 ```powershell
 .\.venv\Scripts\python.exe -m unittest test_service -v
 $env:AI201_DEBUG = "0"
+$env:AI201_RATE_LIMITS = "0"  # The Unit 7 run_demo.py sequence assumes limiting is off.
 .\.venv\Scripts\python.exe app.py
 ```
 
@@ -45,10 +46,18 @@ In another terminal:
 
 ```powershell
 .\.venv\Scripts\python.exe -m unittest test_service test_evaluation -v
+.\.venv\Scripts\python.exe -c "import requests; r=requests.post('http://127.0.0.1:5018/submit',json={'text':'three valid words','creator_id':'model_warmup'},timeout=300); r.raise_for_status()"
 .\.venv\Scripts\python.exe run_attacks.py --flood 15 --creator fresh_flood --url http://127.0.0.1:5018 --timeout 300
-.\.venv\Scripts\python.exe run_attacks.py --set local_attacks --label before --url http://127.0.0.1:5018 --timeout 300
-.\.venv\Scripts\python.exe run_eval.py --label before --url http://127.0.0.1:5018 --timeout 300
+.\.venv\Scripts\python.exe run_attacks.py --set local_attacks --label after --url http://127.0.0.1:5018 --timeout 300
+.\.venv\Scripts\python.exe run_eval.py --label after --url http://127.0.0.1:5018 --timeout 300
 ```
+
+The current human threshold is 0.20. To reproduce the retained before
+configuration, temporarily set `HUMAN_THRESHOLD = 0.35` in `config.py`,
+restart and warm the server, then run with `--label before`. Restore 0.20
+and restart before the after run. `--label` names evidence files; it does
+not change the detector configuration. Use a new flood creator on each
+repeat or restart to reset its quota.
 
 `local_attacks` is AI-authored supplemental testing, NOT the required staff
 set. When the TF supplies the folder holding both attack CSVs, use that folder
