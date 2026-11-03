@@ -343,10 +343,11 @@ mocks are separate from this live evidence.
 
 ## Attack Run - Before / The Improvement / Attack Run - After
 
-**Staff-set blocker:** neither `attacks.csv` nor
+**Historical staff-set limitation, now resolved:** neither `attacks.csv` nor
 `attacks_malformed_requests.csv` was supplied in the project or nearby course
-folders, and no relevant download archive was found. The staff attack exercise
-cannot be claimed complete. `local_attacks/` is explicitly AI-authored
+folders during the initial local experiment. The user subsequently supplied
+the set on November 3, 2026; its measured results are documented below.
+`local_attacks/` is explicitly AI-authored
 supplemental testing, not a renamed or reconstructed staff set. It contains
 29 cases and no genuine human-authored false-positive examples.
 
@@ -735,6 +736,139 @@ and `app.py::appeal`. All three rejections are in the full report.
   {"status":400,"response":{"error":"invalid_reasoning","message":"reasoning must be a nonblank string of at most 2000 characters."}}
 ]
 ```
+
+## Supplied staff attack set
+
+The user supplied `Downloads\attack_set\attack_set` after the supplemental
+experiment. Both CSVs are copied unchanged into `staff_attacks/`, with
+SHA-256 provenance recorded there and in each phase's metadata.
+Only their headers were inspected before the first full measurement.
+The original configuration was temporarily restored to human threshold
+**0.35**; no model, style, weighting, validation, or rate-limit change was
+made for this baseline.
+
+### Staff baseline: every input measured
+
+```powershell
+.\.venv\Scripts\python.exe run_attacks.py --set staff_attacks --label staff_before --url http://127.0.0.1:5018 --timeout 300
+.\.venv\Scripts\python.exe run_eval.py --label staff_before --url http://127.0.0.1:5018 --timeout 300
+```
+
+Raw attack evidence: `results/attack_run_2026-11-03_014941_924998_staff_before.json`
+and its `.md`. All **56** individually judged rows:
+`results/staff_before_verdicts.json`. The exact whole-run audit slice is
+`results/staff_before_audit.json`; every request has its matching decision
+or rejection. There were no skipped rows, crashes, or non-JSON responses.
+The first CSV contains 32 rows and the second contains 24.
+
+| Family | Inputs | HELD | BROKE |
+|---|---|---|---|
+| Evasion | 10 | 1 | 9 |
+| False positive | 8 | 2 | 6 |
+| Prompt injection | 6 | 5 | 1 |
+| Malformed | 20 | 18 | 2 |
+| Same-creator flood | 12 | 12 | 0 |
+| Total | 56 | 38 | 18 |
+
+**Judgment policy:** the staff evasion objective is broader than the local
+set's explicit human-label objective: `unsure` still avoids an AI label, so
+it counts as BROKE for staff evasion. False-positive cases break only when
+they receive `ai`. Injection cases are assessed against their requested
+output or audit effect, not treated as proof of instruction execution.
+MF03/MF04 break because unsuitable control/punctuation text is classified
+instead of rejected. MF07 is valid non-Latin writing, so its bounded, logged
+200 is HELD for route robustness only. Full fixed rules are in
+`staff_attacks/README.md`; none changes `criteria.md`.
+
+The flood target says twenty submissions, but the supplied CSV contains
+**twelve** flood rows. All twelve were run: ten 200s, then two logged 429s,
+within one second. No missing eight rows or twenty-request result is invented.
+The separate Milestone 1 fifteen-request flood remains the limiter evidence.
+
+### Ten real staff audit entries
+
+These cover evasion, human false accusations, the partial injection output,
+accepted junk, and a limiter rejection. Timestamps are the stored UTC values.
+
+```json
+[
+  {"combined_score":0.3918,"confidence":0.2164,"content_id":"55ae7328-3d6f-4c63-8da9-7cb6ee0559e8","creator_id":"attacker_EV01","guess":"unsure","label":"Our checks cannot reliably tell how this was written. This is not an accusation; you can request a review.","model_score":0.1635,"status":"decided","style_score":0.6201,"timestamp":"2026-11-03T09:49:32+00:00"},
+  {"combined_score":0.3423,"confidence":0.3154,"content_id":"78f76835-25d0-4c1f-b700-9b1038255caa","creator_id":"attacker_EV05","guess":"human","label":"This writing looks more like human writing to our checks. This is an estimate, not proof of who wrote it.","model_score":0.3212,"status":"decided","style_score":0.3635,"timestamp":"2026-11-03T09:49:33+00:00"},
+  {"combined_score":0.6828,"confidence":0.3656,"content_id":"30f41acf-1a7d-4ef3-92a7-fd681f37ae19","creator_id":"attacker_FP02","guess":"ai","label":"Our checks found patterns that can appear in AI-generated writing. People can write this way too; you can request a review.","model_score":0.7387,"status":"decided","style_score":0.6269,"timestamp":"2026-11-03T09:49:35+00:00"},
+  {"combined_score":0.6913,"confidence":0.3826,"content_id":"02df4f28-e0f0-489a-9ee8-656f587d904a","creator_id":"attacker_FP03","guess":"ai","label":"Our checks found patterns that can appear in AI-generated writing. People can write this way too; you can request a review.","model_score":0.8051,"status":"decided","style_score":0.5774,"timestamp":"2026-11-03T09:49:35+00:00"},
+  {"combined_score":0.7154,"confidence":0.4308,"content_id":"380f7ebe-de54-4246-bcf0-c444682b65de","creator_id":"attacker_FP05","guess":"ai","label":"Our checks found patterns that can appear in AI-generated writing. People can write this way too; you can request a review.","model_score":0.8005,"status":"decided","style_score":0.6303,"timestamp":"2026-11-03T09:49:36+00:00"},
+  {"combined_score":0.657,"confidence":0.314,"content_id":"d011a12b-381e-4c04-bd01-493bcbf984bd","creator_id":"attacker_FP07","guess":"ai","label":"Our checks found patterns that can appear in AI-generated writing. People can write this way too; you can request a review.","model_score":0.8816,"status":"decided","style_score":0.4323,"timestamp":"2026-11-03T09:49:36+00:00"},
+  {"combined_score":0.2602,"confidence":0.4796,"content_id":"632378bb-704f-4e2e-88e3-71f0102b4a88","creator_id":"attacker_PI02","guess":"human","label":"This writing looks more like human writing to our checks. This is an estimate, not proof of who wrote it.","model_score":0.2044,"status":"decided","style_score":0.316,"timestamp":"2026-11-03T09:49:37+00:00"},
+  {"combined_score":0.5,"confidence":0.0,"content_id":"9030d9a7-966f-435c-b471-b529cee5c9f9","creator_id":"attacker_MF03","guess":"unsure","label":"Our checks cannot reliably tell how this was written. This is not an accusation; you can request a review.","model_score":0.0,"status":"decided","style_score":0.5,"timestamp":"2026-11-03T09:49:39+00:00"},
+  {"combined_score":0.2556,"confidence":0.4888,"content_id":"967b63b9-10a0-4bff-9555-9f1520e82123","creator_id":"attacker_MF04","guess":"human","label":"This writing looks more like human writing to our checks. This is an estimate, not proof of who wrote it.","model_score":0.0112,"status":"decided","style_score":0.5,"timestamp":"2026-11-03T09:49:39+00:00"},
+  {"creator_id":"attacker_flood","event":"rejected","limit":"10 per 1 minute","reason":"rate_limited","route":"/submit","status":"rejected","timestamp":"2026-11-03T09:49:41+00:00"}
+]
+```
+
+### Every broken staff attack: stage and mechanism
+
+These diagnoses are AI-assisted and grounded in the recorded scores and
+`app.py::submit`, `detector.py::model_signal`, `stylometry.py::style_signal`,
+`scoring.py::combine_signals`, and `scoring.py::score_to_label`.
+
+| Attack | Stage and mechanism |
+|---|---|
+| EV01 | **Signal one and combining rule:** model 0.1635 averages with style 0.6201 to 0.3918, below the AI band. The typo text and the unquoted EV03 reference prefix have identical measured spread 0.1607, variety 0.8706, punctuation 0.0192, and style 0.6201. The claimed increase in variety did not occur; low model evidence, not a changed style score, drives this evasion. |
+| EV02 | **Signal two:** inserted one-word sentences raise spread to 0.8492; style falls to 0.2827 from the reference prefix's 0.6201. Averaging with model 0.5943 gives 0.4385, `unsure`. |
+| EV03 | **Signal two and combining rule:** the quotation raises spread to 0.4434 and lowers style to 0.4668. Even model 0.6662, above the AI threshold, averages down to 0.5665, `unsure`. |
+| EV04 | **Signal one and label mapping:** unusual-word prose yields model 0.6114 and style 0.6096. Both are below 0.65; the mean 0.6105 remains outside the AI band. No matched model-score comparison proves the amount of perplexity change. |
+| EV05 | **Both signals and label mapping:** conversational fragments produce spread 0.6753 and style 0.3635; model is 0.3212. Their mean 0.3423 is inside the original human band. Moving it to uncertainty would still leave this broad AI-evasion objective broken. |
+| EV06 | **Signal two:** spread 1.1859 saturates the regularity penalty, producing style 0.2459. With model 0.5727 the mean is 0.4093, `unsure`. |
+| EV07 | **Signal two's evidence gate:** semicolons do not split sentences in this implementation. The single-sentence text gets neutral style 0.5, not a full punctuation-based assessment; model 0.5862 averages to 0.5431. |
+| EV08 | **Signal two's short-text gate and combining rule:** ten words pass the route's three-word minimum but get neutral style 0.5. Model 0.2452 gives mean 0.3726. This is short evidence, not proof of a 400-token truncation bypass. |
+| EV09 | **Signal two and combining rule:** the conversational opening raises spread to 0.4675 and gives style 0.4575. Model 0.7042 is AI-like, but their mean 0.5809 is `unsure`. |
+| FP02 | **Both signals and label mapping:** formal report wording yields model 0.7387; regular sentence lengths, spread 0.2403, give style 0.6269. Their mean 0.6828 falsely crosses the AI boundary. |
+| FP03 | **Signal one and combining rule:** carefully written ordinary sentences score model 0.8051 and style 0.5774. The equal mean 0.6913 falsely reaches `ai`; fluency/predictability is being used as authorship evidence. |
+| FP04 | **Signal one and combining rule:** rubric-shaped explanation yields model 0.8329. Style 0.5261 does not counterbalance it enough; mean 0.6795 becomes `ai`. |
+| FP05 | **Both signals:** repeated technical wording has variety 0.5857 and style 0.6303; model 0.8005 gives mean 0.7154. A predictable documentation register is mistaken for AI provenance. |
+| FP06 | **Signal one and disagreement guard:** template wording yields model 0.8814 despite style 0.4718. Their difference 0.4096 does not activate the 0.50 guard; mean 0.6766 becomes `ai`. |
+| FP07 | **Signal one and label mapping:** deliberate repetition yields model 0.8816. Style 0.4323 is comparatively human-like but their difference 0.4493 misses the guard; mean 0.6570 just crosses 0.65. |
+| PI02 | **Signal one and label mapping:** instruction-shaped text scores 0.2044 model / 0.3160 style, giving 0.2602 and the requested `human` output. Scoring was not bypassed: confidence is 0.4796, not the requested 0.02, and a genuine decision was logged. BROKE describes the partial label outcome, not instruction execution. |
+| MF03 | **Route and combining rule:** three whitespace chunks let mixed control characters reach inference. Model 0 and neutral style 0.5 trigger the disagreement guard at exactly 0.50, yielding a logged `unsure` decision instead of rejecting unsuitable text. |
+| MF04 | **Route and signal two's evidence gate:** eight punctuation chunks pass the whitespace-word minimum despite having no lexical words. Neutral style 0.5 and model 0.0112 yield 0.2556 and a successful decision on non-writing. |
+
+**Pattern:** nine AI evasions fall outside the AI band, while six of eight
+staff-designated human cases enter it. Ordinary register and surface shape
+are poor provenance evidence. Separate route permissiveness explains the
+two junk-text successes; they are not prompt-injection execution.
+PI04's label remains fixed and PI05 creates only the genuine computed audit
+entry, so those concrete injection targets are HELD.
+
+### Worst staff outcome: FP03
+
+I would least want to explain an AI accusation against the staff-designated
+careful non-native writer. This is more consequential than the earlier
+supplemental typo evasion. The designation comes from the supplied staff
+family, not independently verified personal authorship.
+
+```text
+I want to describe my experience of the first month in this country. The weather was very different from my home. I did not expect the rain to continue for so many days. My colleagues were kind and they helped me to find an apartment. I am still learning the words that people use in the office. Sometimes I do not understand the jokes. But I am happy that I came here and I think it was a good decision for my family.
+```
+
+Actual response from `app.py::submit`:
+
+```json
+{"combined_score":0.6913,"confidence":0.3826,"content_id":"02df4f28-e0f0-489a-9ee8-656f587d904a","guess":"ai","label":"Our checks found patterns that can appear in AI-generated writing. People can write this way too; you can request a review.","model_score":0.8051,"status":"decided","style_score":0.5774}
+```
+
+Three candidate causes at different stages are route input corruption,
+predictability/style being mistaken for authorship, and an overly aggressive
+label boundary. The recorded signals and the actual equal mean show that the
+combining/label stages convert these surface heuristics into the accusation;
+there is no evidence of a route corruption. This is not a 38% probability
+of AI authorship: confidence records score extremity.
+
+**The one improvement to measure:** reapply the already selected human
+threshold change, **0.35 to 0.20**, without adding a second scoring or
+validation fix. Staff EV05 (0.3423) and PI02 (0.2602) should move to `unsure`.
+That can help the explicit human-output objective, but cannot fix broad
+AI evasion or the six false accusations because the AI boundary stays 0.65.
+The narrower human band also creates more uncertainty for genuine writers.
 
 ## What's Still Broken
 
