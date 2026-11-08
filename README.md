@@ -27,6 +27,30 @@ thresholds, adding a new classification capability, or treating the detector
 as suitable for real authorship accusations. The hosted instance is a
 demonstration service and must use synthetic, non-identifying inputs.
 
+## Capstone: Running It
+
+Path A uses the repository's `Dockerfile` and Gunicorn configuration. The
+container build downloads GPT-2 into the image, starts one warmed worker, and
+writes structured request records to both `logs/requests.jsonl` and the host's
+standard output. The public URL and platform tier must be added after a hosting
+account with at least 2 GB of memory is authorized. See [RUNNING.md](RUNNING.md)
+for the exact command and required environment variables.
+
+## Capstone: Instrumentation
+
+Each request record contains a timestamp, request ID, method, route, safe input
+summary, output outcome, HTTP status, model-load state, and end-to-end duration
+in milliseconds. Submitted text, appeal reasoning, credentials, and creator
+identities are excluded. Hosted access to `/log` and `/operations` fails closed
+unless `AI201_LOG_ACCESS_TOKEN` is configured and sent as a bearer token.
+
+## Capstone: What It Costs
+
+No hosting cost is claimed yet. The final value must come from the authorized
+host's billing record, and request compute cost can be reported from the
+measured `duration_ms` values. Estimated documentation prices are not a
+substitute for that measurement.
+
 ## Run locally on Windows
 
 Use Python 3.11-3.13. The local `.venv` has been installed.

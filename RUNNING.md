@@ -266,52 +266,69 @@ trace look exactly like a quiet afternoon.
 
 ---
 
-## Running it somewhere else (unit 9)
+## Capstone Path A — hosted container
 
-Unit 9 asks you to deploy one of your systems. **Read this before you pick
-which one** — for this project the answer is already decided, and it isn't the
-hosted one.
+The capstone uses a Linux container because the service needs both PyTorch and
+the roughly 550 MB GPT-2 model. The course's 512 MB free tier is too small;
+choose a host with at least 2 GB of memory and confirm the actual peak after a
+real submission. The model is downloaded while the image is built so an
+ephemeral instance does not download it every time it starts.
 
-Flask's built-in server says "development server" on startup because that's
-what it is. A real one comes from `gunicorn`, which is in
-`requirements.txt` and unused until now:
+The container has one start command:
 
 ```bash
-gunicorn app:app --bind 0.0.0.0:$PORT
+gunicorn --config gunicorn.conf.py app:app
 ```
 
-Two settings do the work, and both read the environment:
+The supplied `Dockerfile` runs that command automatically. A local container
+smoke test, on a machine with Docker, is:
 
-| Variable | Default | What it does |
+```powershell
+docker build -t provenance-guard .
+docker run --rm -p 8000:8000 `
+  -e PORT=8000 `
+  -e AI201_LOG_ACCESS_TOKEN=replace-with-a-random-secret `
+  provenance-guard
+```
+
+Then check the public-safe route:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/health
+```
+
+Every host must set these values:
+
+| Variable | Required value | Purpose |
 |---|---|---|
-| `HOST` | `127.0.0.1` | Loopback — your machine only. A host needs `0.0.0.0`, or nothing outside the box can reach the service and it looks like the app is down |
-| `PORT` | `5000` | Most hosts hand you a port in `PORT` and expect you to bind exactly that one |
-| `AI201_DEBUG` | `1` | Debug mode. Off automatically whenever `HOST` isn't loopback — an interactive debugger on a public address is a stranger's Python prompt inside your process |
+| `PORT` | The port assigned by the host | Gunicorn listens on the expected port |
+| `HOST` | `0.0.0.0` | Marks the service as hosted and turns off debug mode |
+| `AI201_LOG_ACCESS_TOKEN` | A random secret | Protects `/log` and `/operations` |
+| `AI201_LOG_STDOUT` | `1` | Copies structured request records to platform logs |
 
-Nothing about your local workflow changes. With no variables set you get
-`http://127.0.0.1:5000` and every `curl` above still works.
+`/operations` returns the same privacy-preserving request records written to
+`logs/requests.jsonl`. It requires the bearer token:
 
-### This project will not fit a free host
+```powershell
+$headers = @{ Authorization = "Bearer $env:AI201_LOG_ACCESS_TOKEN" }
+Invoke-RestMethod "https://YOUR-HOST/operations?limit=10" -Headers $headers
+```
 
-Say it plainly, because the arithmetic is the point:
+Do not submit private writing or identifying creator IDs. The request log
+stores field names, character/word counts, outcome, status code, model-load
+state, and duration; it deliberately does not store submitted text or appeal
+reasoning.
 
-| What has to be in memory | Roughly |
-|---|---|
-| `torch` | ~200–800 MB depending on the build |
-| the `gpt2` weights | ~550 MB on disk, loaded into RAM to score |
-| Flask, gunicorn, your code | the rest |
-| **A free tier gives you** | **512 MB** |
+### Host evidence still required
 
-That's over budget before a single request arrives — and a free host has no
-persistent disk, so the 550 MB download starts again after every idle
-spin-down. There is no configuration that fixes this. The model is the size it
-is.
+After choosing and authorizing a host, replace `https://YOUR-HOST` with the
+real URL and record:
 
-**So pair 4 extensions take Path B — local, with logs.** That is the expected
-answer for this project, not a fallback and not a failure. Working out that a
-system doesn't fit its host *before* you spend an evening watching it get
-killed is the skill unit 9 is actually testing. Write the arithmetic above in
-your write-up; that's the deliverable.
+1. The hosting platform and memory tier.
+2. A successful `/health` response.
+3. At least ten `/operations` entries from synthetic requests.
+4. The measured hosting charge and/or request compute seconds.
+5. Whether each latency measurement is a cold or warm request.
 
 ---
 
