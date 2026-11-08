@@ -29,4 +29,3 @@ USER appuser
 EXPOSE 8000
 
 CMD ["gunicorn", "--config", "gunicorn.conf.py", "app:app"]
-

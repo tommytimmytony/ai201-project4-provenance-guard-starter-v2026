@@ -14,4 +14,3 @@ def post_fork(server, worker):
     import detector
 
     server.log.info(detector.warm_up())
-
