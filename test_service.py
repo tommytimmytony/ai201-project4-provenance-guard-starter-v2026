@@ -71,7 +71,11 @@ class ServiceTests(unittest.TestCase):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
         log_dir = Path(self.directory.name)
-        for name, value in (("LOG_DIR", log_dir), ("AUDIT_LOG", log_dir / "audit.jsonl")):
+        for name, value in (
+            ("LOG_DIR", log_dir),
+            ("AUDIT_LOG", log_dir / "audit.jsonl"),
+            ("REQUEST_LOG", log_dir / "requests.jsonl"),
+        ):
             patcher = patch.object(config, name, value)
             patcher.start()
             self.addCleanup(patcher.stop)
@@ -107,6 +111,24 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(entry["style_score"], body["style_score"])
         log = self.client.get("/log?limit=1").get_json()
         self.assertEqual(log["entries"], [entry])
+
+    def test_request_instrumentation_records_input_output_and_duration(self):
+        response = self.submit()
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("X-Request-ID", response.headers)
+
+        entry = audit.read_request_entries()[0]
+        self.assertEqual(entry["request_id"], response.headers["X-Request-ID"])
+        self.assertEqual(entry["method"], "POST")
+        self.assertEqual(entry["route"], "/submit")
+        self.assertEqual(entry["status_code"], 200)
+        self.assertGreaterEqual(entry["duration_ms"], 0)
+        self.assertEqual(entry["input"]["fields"], ["creator_id", "text"])
+        self.assertEqual(entry["input"]["text_chars"], len(
+            "This sample contains enough words to be scored.",
+        ))
+        self.assertEqual(entry["output"]["outcome"], "decided")
+        self.assertNotIn("This sample", json.dumps(entry))
 
     def test_ids_are_unique(self):
         self.assertNotEqual(self.submit().get_json()["content_id"], self.submit().get_json()["content_id"])

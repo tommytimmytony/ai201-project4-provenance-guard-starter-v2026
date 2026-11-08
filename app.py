@@ -24,9 +24,10 @@ Routes:
     GET  /health      is the service up, and is the model loaded
 """
 
+import time
 import uuid
 
-from flask import Flask, jsonify, request
+from flask import Flask, g, jsonify, request
 
 import audit
 import config
@@ -36,6 +37,69 @@ import stylometry
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = config.MAX_REQUEST_BYTES
+
+
+def _input_summary() -> dict:
+    summary = {
+        "content_type": request.content_type,
+        "request_bytes": request.content_length,
+    }
+    if request.content_length and request.content_length > config.MAX_REQUEST_BYTES:
+        return summary
+    payload = request.get_json(silent=True) if request.is_json else None
+    if not isinstance(payload, dict):
+        return summary
+
+    summary["fields"] = sorted(payload)
+    text = payload.get("text")
+    if isinstance(text, str):
+        summary["text_chars"] = len(text)
+        summary["text_words"] = len(text.split())
+    reasoning = payload.get("reasoning")
+    if isinstance(reasoning, str):
+        summary["reasoning_chars"] = len(reasoning)
+    return summary
+
+
+def _output_summary(response) -> dict:
+    body = response.get_json(silent=True)
+    outcome = None
+    if isinstance(body, dict):
+        outcome = body.get("error") or body.get("status")
+        if outcome is None and "ok" in body:
+            outcome = "ok" if body["ok"] else "not_ok"
+    return {
+        "outcome": outcome,
+        "response_bytes": response.calculate_content_length(),
+    }
+
+
+@app.before_request
+def start_request_measurement():
+    g.request_id = str(uuid.uuid4())
+    g.request_started = time.perf_counter()
+    g.detector_loaded_before = detector._model is not None
+
+
+@app.after_request
+def record_request(response):
+    duration_ms = round((time.perf_counter() - g.request_started) * 1000, 3)
+    try:
+        audit.log_request(
+            request_id=g.request_id,
+            method=request.method,
+            route=request.path,
+            status_code=response.status_code,
+            duration_ms=duration_ms,
+            input_summary=_input_summary(),
+            output_summary=_output_summary(response),
+            detector_loaded_before=g.detector_loaded_before,
+            detector_loaded_after=detector._model is not None,
+        )
+    except OSError:
+        app.logger.exception("The operational request log could not be written.")
+    response.headers["X-Request-ID"] = g.request_id
+    return response
 
 
 def reject(reason, message, status=400, payload=None):

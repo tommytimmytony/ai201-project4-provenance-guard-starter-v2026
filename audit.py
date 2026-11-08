@@ -112,27 +112,59 @@ def log_rejection(creator_id: str, reason: str, **extra) -> dict:
     })
 
 
+def log_request(
+    request_id: str,
+    method: str,
+    route: str,
+    status_code: int,
+    duration_ms: float,
+    input_summary: dict,
+    output_summary: dict,
+    **extra,
+) -> dict:
+    """Record one end-to-end HTTP request without storing submitted text."""
+    entry = {
+        "timestamp": _now(),
+        "event": "request",
+        "request_id": request_id,
+        "method": method,
+        "route": route,
+        "input": input_summary,
+        "output": output_summary,
+        "status_code": status_code,
+        "duration_ms": duration_ms,
+        **extra,
+    }
+    return _append_to(config.REQUEST_LOG, entry, emit=config.REQUEST_LOG_STDOUT)
+
+
 def _append(entry: dict) -> dict:
-    config.LOG_DIR.mkdir(parents=True, exist_ok=True)
-    line = json.dumps(entry, ensure_ascii=False)
+    return _append_to(config.AUDIT_LOG, entry)
+
+
+def _append_to(path, entry: dict, emit: bool = False) -> dict:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    line = json.dumps(entry, ensure_ascii=False, sort_keys=True)
     with _lock:
-        with config.AUDIT_LOG.open("a", encoding="utf-8") as f:
+        with path.open("a", encoding="utf-8") as f:
             f.write(line + "\n")
+    if emit:
+        print(line, flush=True)
     return entry
 
 
-def read_entries(limit: int | None = None) -> list[dict]:
+def _read_from(path, limit: int | None = None) -> list[dict]:
     """
     Read the log back, oldest first. `limit` keeps the most recent N.
 
     A malformed line is skipped rather than raising — a log that can't be read
     because of one bad row is worse than a log with a gap.
     """
-    if not config.AUDIT_LOG.exists():
+    if not path.exists():
         return []
 
     entries = []
-    for line in config.AUDIT_LOG.read_text(encoding="utf-8").splitlines():
+    for line in path.read_text(encoding="utf-8").splitlines():
         line = line.strip()
         if not line:
             continue
@@ -142,6 +174,14 @@ def read_entries(limit: int | None = None) -> list[dict]:
             continue
 
     return entries[-limit:] if limit else entries
+
+
+def read_entries(limit: int | None = None) -> list[dict]:
+    return _read_from(config.AUDIT_LOG, limit)
+
+
+def read_request_entries(limit: int | None = None) -> list[dict]:
+    return _read_from(config.REQUEST_LOG, limit)
 
 
 def clear() -> int:

@@ -100,4 +100,6 @@ RATE_LIMIT_STORAGE = "memory://"
 
 LOG_DIR = ROOT / "logs"
 AUDIT_LOG = LOG_DIR / "audit.jsonl"
+REQUEST_LOG = LOG_DIR / "requests.jsonl"
+REQUEST_LOG_STDOUT = os.getenv("AI201_LOG_STDOUT", "0") == "1"
 RESULTS_DIR = ROOT / "results"
