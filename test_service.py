@@ -130,6 +130,27 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(entry["output"]["outcome"], "decided")
         self.assertNotIn("This sample", json.dumps(entry))
 
+    def test_hosted_log_routes_require_bearer_token(self):
+        with patch.object(config, "LOG_ACCESS_REQUIRED", True), patch.object(
+            config, "LOG_ACCESS_TOKEN", "review-secret",
+        ):
+            for route in ("/log", "/operations"):
+                with self.subTest(route=route):
+                    self.assertEqual(self.client.get(route).status_code, 401)
+                    self.assertEqual(self.client.get(
+                        route, headers={"Authorization": "Bearer wrong"},
+                    ).status_code, 401)
+                    self.assertEqual(self.client.get(
+                        route, headers={"Authorization": "Bearer review-secret"},
+                    ).status_code, 200)
+
+    def test_hosted_log_routes_fail_closed_without_token(self):
+        with patch.object(config, "LOG_ACCESS_REQUIRED", True), patch.object(
+            config, "LOG_ACCESS_TOKEN", "",
+        ):
+            self.assertEqual(self.client.get("/log").status_code, 503)
+            self.assertEqual(self.client.get("/operations").status_code, 503)
+
     def test_ids_are_unique(self):
         self.assertNotEqual(self.submit().get_json()["content_id"], self.submit().get_json()["content_id"])
 

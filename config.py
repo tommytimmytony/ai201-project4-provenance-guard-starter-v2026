@@ -20,11 +20,17 @@ ROOT = Path(__file__).parent
 # is how you get it; the default keeps your local `curl` commands unchanged.
 HOST = os.getenv("HOST", "127.0.0.1")
 PORT = int(os.getenv("PORT", "5000"))
+LOOPBACK_HOSTS = ("127.0.0.1", "localhost")
 
 # Flask's debug mode gives anyone who can reach the service an interactive
 # Python prompt inside your process. Fine on loopback, a gift to strangers
 # anywhere else — so it turns itself off the moment HOST isn't loopback.
-DEBUG = os.getenv("AI201_DEBUG", "1") == "1" and HOST in ("127.0.0.1", "localhost")
+DEBUG = os.getenv("AI201_DEBUG", "1") == "1" and HOST in LOOPBACK_HOSTS
+
+# Local exercises can read logs without credentials. A hosted service must set
+# AI201_LOG_ACCESS_TOKEN; otherwise the log routes fail closed with 503.
+LOG_ACCESS_REQUIRED = HOST not in LOOPBACK_HOSTS
+LOG_ACCESS_TOKEN = os.getenv("AI201_LOG_ACCESS_TOKEN", "")
 
 
 # ─── The local model ─────────────────────────────────────────────────────────

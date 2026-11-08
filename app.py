@@ -24,6 +24,7 @@ Routes:
     GET  /health      is the service up, and is the model loaded
 """
 
+import hmac
 import time
 import uuid
 
@@ -72,6 +73,29 @@ def _output_summary(response) -> dict:
         "outcome": outcome,
         "response_bytes": response.calculate_content_length(),
     }
+
+
+def _require_log_access():
+    if not config.LOG_ACCESS_REQUIRED:
+        return None
+    if not config.LOG_ACCESS_TOKEN:
+        return jsonify({
+            "error": "log_access_unconfigured",
+            "message": "The hosted service has no audit-log access token configured.",
+        }), 503
+
+    authorization = request.headers.get("Authorization", "")
+    scheme, separator, supplied = authorization.partition(" ")
+    if (
+        not separator
+        or scheme.lower() != "bearer"
+        or not hmac.compare_digest(supplied, config.LOG_ACCESS_TOKEN)
+    ):
+        return jsonify({
+            "error": "unauthorized",
+            "message": "Send the audit-log token as an Authorization bearer token.",
+        }), 401
+    return None
 
 
 @app.before_request
@@ -350,8 +374,22 @@ def get_log():
     You need this in unit 8 to paste entries into your README, and you need it
     now to see whether your logging is actually working.
     """
+    access_error = _require_log_access()
+    if access_error is not None:
+        return access_error
     limit = request.args.get("limit", type=int)
     entries = audit.read_entries(limit=limit)
+    return jsonify({"count": len(entries), "entries": entries})
+
+
+@app.get("/operations")
+def get_operations():
+    """Return privacy-preserving request records to an authorized reviewer."""
+    access_error = _require_log_access()
+    if access_error is not None:
+        return access_error
+    limit = request.args.get("limit", type=int)
+    entries = audit.read_request_entries(limit=limit)
     return jsonify({"count": len(entries), "entries": entries})
 
 
