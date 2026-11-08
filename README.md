@@ -8,6 +8,25 @@ All calibration passages and the demonstration criteria were drafted by AI.
 They are not the student's original writing or independently chosen criteria.
 No human-writing accuracy or false-positive rate has been established.
 
+## Capstone: What This Extends
+
+This capstone extends the existing Provenance Guard service with an operational
+layer for a hosted run. The detector and its decision behavior stay unchanged;
+the new work makes each HTTP request observable through privacy-preserving
+structured records that capture what kind of input arrived, what outcome left
+the service, and how long the request took.
+
+## Capstone: The Shape
+
+This is **Shape A — Deploy and instrument** using **Path A — hosted**. The
+extension is the hosted run path and request instrumentation around the
+existing service.
+
+Out of scope: changing GPT-2 or the stylometry signal, recalibrating decision
+thresholds, adding a new classification capability, or treating the detector
+as suitable for real authorship accusations. The hosted instance is a
+demonstration service and must use synthetic, non-identifying inputs.
+
 ## Run locally on Windows
 
 Use Python 3.11-3.13. The local `.venv` has been installed.
