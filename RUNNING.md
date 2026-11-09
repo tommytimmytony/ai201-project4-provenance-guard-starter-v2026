@@ -330,6 +330,18 @@ real URL and record:
 4. The measured hosting charge and/or request compute seconds.
 5. Whether each latency measurement is a cold or warm request.
 
+Run all five committed capstone criteria with:
+
+```powershell
+$env:CAPSTONE_BASE_URL = "https://YOUR-HOST"
+$env:CAPSTONE_LOG_TOKEN = $env:AI201_LOG_ACCESS_TOKEN
+.\.venv\Scripts\python.exe run_capstone.py
+```
+
+The runner executes three trials per criterion and writes a timestamped
+Markdown record under `results\`. Its first HTTP request is the first latency
+trial, so the criterion includes the host's initial response as written.
+
 ---
 
 ## Where everything lives
