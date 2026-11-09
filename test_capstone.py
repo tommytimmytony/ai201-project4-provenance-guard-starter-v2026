@@ -7,10 +7,11 @@ import run_capstone
 
 
 class FakeResponse:
-    def __init__(self, status_code, body=None, text=None):
+    def __init__(self, status_code, body=None, text=None, headers=None):
         self.status_code = status_code
         self._body = body
         self.text = text if text is not None else ""
+        self.headers = headers or {}
 
     def json(self):
         return self._body
@@ -79,6 +80,43 @@ class CapstoneRunnerTests(unittest.TestCase):
         self.assertTrue(trials[0]["passed"])
         self.assertFalse(trials[1]["passed"])
         self.assertTrue(trials[2]["passed"])
+
+    def test_compute_measurement_preserves_matching_operations(self):
+        responses = [
+            (
+                FakeResponse(200, headers={"X-Request-ID": "request-1"}),
+                250.0,
+            ),
+            (
+                FakeResponse(200, headers={"X-Request-ID": "request-2"}),
+                350.0,
+            ),
+            (
+                FakeResponse(200, {
+                    "entries": [
+                        {"request_id": "unrelated", "duration_ms": 999.0},
+                        {"request_id": "request-1", "duration_ms": 100.0},
+                        {"request_id": "request-2", "duration_ms": 200.0},
+                    ],
+                }),
+                5.0,
+            ),
+        ]
+
+        with patch.object(run_capstone, "LOG_TOKEN", "review-secret"), patch.object(
+            run_capstone, "request", side_effect=responses,
+        ):
+            measurement = run_capstone.compute_measurement(count=2)
+
+        self.assertEqual(measurement["successful_trials"], 2)
+        self.assertEqual(measurement["preserved_operation_count"], 2)
+        self.assertEqual(measurement["average_service_seconds"], 0.15)
+        self.assertEqual(measurement["average_client_seconds"], 0.3)
+        self.assertEqual(measurement["hundred_runs_service_seconds"], 15.0)
+        self.assertEqual(
+            [entry["request_id"] for entry in measurement["operations"]],
+            ["request-1", "request-2"],
+        )
 
 
 if __name__ == "__main__":

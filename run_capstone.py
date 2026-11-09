@@ -124,6 +124,80 @@ def sensitive_data_trials() -> list[dict]:
     return trials
 
 
+def compute_measurement(count: int = 10) -> dict:
+    """Measure synthetic submissions and preserve their hosted request records."""
+    request_ids = []
+    trials = []
+
+    for index in range(1, count + 1):
+        response, client_duration_ms = request("POST", "/submit", json={
+            "text": (
+                "This synthetic hosted measurement contains enough words for "
+                "the detector while excluding private or identifying writing."
+            ),
+            "creator_id": f"capstone-cost-{index}",
+        })
+        request_id = response.headers.get("X-Request-ID")
+        request_ids.append(request_id)
+        trials.append({
+            "trial": index,
+            "status_code": response.status_code,
+            "request_id": request_id,
+            "client_duration_ms": client_duration_ms,
+        })
+
+    operations_response, _ = request(
+        "GET",
+        "/operations?limit=500",
+        headers={"Authorization": f"Bearer {LOG_TOKEN}"},
+    )
+    operations_body = operations_response.json()
+    all_entries = (
+        operations_body.get("entries", [])
+        if isinstance(operations_body, dict)
+        else []
+    )
+    entries_by_id = {
+        entry.get("request_id"): entry
+        for entry in all_entries
+        if isinstance(entry, dict)
+    }
+    entries = [
+        entries_by_id[request_id]
+        for request_id in request_ids
+        if request_id in entries_by_id
+    ]
+
+    service_durations = [
+        float(entry["duration_ms"])
+        for entry in entries
+        if isinstance(entry.get("duration_ms"), (int, float))
+    ]
+    client_durations = [trial["client_duration_ms"] for trial in trials]
+    return {
+        "trial_count": count,
+        "successful_trials": sum(
+            trial["status_code"] == 200 and bool(trial["request_id"])
+            for trial in trials
+        ),
+        "preserved_operation_count": len(entries),
+        "average_service_seconds": round(
+            sum(service_durations) / len(service_durations) / 1000,
+            6,
+        ) if service_durations else None,
+        "average_client_seconds": round(
+            sum(client_durations) / len(client_durations) / 1000,
+            6,
+        ) if client_durations else None,
+        "hundred_runs_service_seconds": round(
+            sum(service_durations) / len(service_durations) / 10,
+            6,
+        ) if service_durations else None,
+        "trials": trials,
+        "operations": entries,
+    }
+
+
 def criterion(name: str, trials: list[dict]) -> dict:
     return {
         "name": name,
@@ -151,6 +225,39 @@ def render_markdown(run: dict) -> str:
             "```",
             "",
         ])
+    measurement = run["compute_measurement"]
+    lines.extend([
+        "## Measured compute cost",
+        "",
+        (
+            f"- Successful synthetic submissions: "
+            f"{measurement['successful_trials']} of {measurement['trial_count']}"
+        ),
+        (
+            f"- Preserved matching operation records: "
+            f"{measurement['preserved_operation_count']}"
+        ),
+        (
+            f"- Average service compute: "
+            f"{measurement['average_service_seconds']} seconds per submission"
+        ),
+        (
+            f"- Average client-observed latency: "
+            f"{measurement['average_client_seconds']} seconds per submission"
+        ),
+        (
+            f"- At 100 submissions per day: "
+            f"{measurement['hundred_runs_service_seconds']} measured service "
+            "compute seconds per day"
+        ),
+        "",
+        "## Durable operations extract",
+        "",
+        "```json",
+        json.dumps(measurement["operations"], indent=2, sort_keys=True),
+        "```",
+        "",
+    ])
     return "\n".join(lines)
 
 
@@ -170,6 +277,7 @@ def main() -> int:
     ]
     error_trials = [method_error_trial() for _ in range(3)]
     sensitive_trials = sensitive_data_trials()
+    compute = compute_measurement()
 
     results = [
         criterion("Hosted Service Availability", availability_trials),
@@ -189,6 +297,7 @@ def main() -> int:
         "base_url": BASE_URL,
         "verdict": "MET" if all(item["verdict"] == "MET" for item in results) else "MISSED",
         "criteria": results,
+        "compute_measurement": compute,
     }
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
