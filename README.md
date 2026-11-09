@@ -32,9 +32,17 @@ demonstration service and must use synthetic, non-identifying inputs.
 Path A uses the repository's `Dockerfile` and Gunicorn configuration. The
 container build downloads GPT-2 into the image, starts one warmed worker, and
 writes structured request records to both `logs/requests.jsonl` and the host's
-standard output. The public URL and platform tier must be added after a hosting
-account with at least 2 GB of memory is authorized. See [RUNNING.md](RUNNING.md)
-for the exact command and required environment variables.
+standard output. The deployed service is:
+
+- URL: `https://ca-provenance-guard.wonderfulground-5f32bf09.westus2.azurecontainerapps.io`
+- Platform: Azure Container Apps consumption environment in West US 2
+- Container allocation: 1 vCPU and 2 GiB memory
+- Scale range: zero to one replica
+- Image: `provenance-guard:capstone-a69c610` in a dedicated Basic Azure
+  Container Registry
+
+See [RUNNING.md](RUNNING.md) for the exact command and required environment
+variables.
 
 ## Capstone: Instrumentation
 
@@ -44,12 +52,23 @@ in milliseconds. Submitted text, appeal reasoning, credentials, and creator
 identities are excluded. Hosted access to `/log` and `/operations` fails closed
 unless `AI201_LOG_ACCESS_TOKEN` is configured and sent as a bearer token.
 
+## Capstone: Hosted Verification
+
+The first hosted run completed on November 8, 2026. All five committed
+criteria were met, including three availability trials, six unauthorized
+log-access trials, three latency trials, three error-handling trials, and
+three sensitive-data trials. The run produced 29 privacy-preserving
+operational records. The complete measured evidence is in
+[`results/capstone_hosted_2026-11-08_170516.md`](results/capstone_hosted_2026-11-08_170516.md).
+
 ## Capstone: What It Costs
 
-No hosting cost is claimed yet. The final value must come from the authorized
-host's billing record, and request compute cost can be reported from the
-measured `duration_ms` values. Estimated documentation prices are not a
-substitute for that measurement.
+The deployment uses a dedicated Basic Azure Container Registry and an Azure
+Container Apps consumption environment configured to scale to zero. The
+resources were created on November 8, 2026, so Azure billing data had not yet
+settled when the first hosted run completed. No dollar amount is claimed until
+the subscription's billing record reports the measured charge. The Visual
+Studio subscription spending limit remains the external cost guardrail.
 
 ## Run locally on Windows
 
