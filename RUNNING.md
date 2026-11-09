@@ -274,6 +274,41 @@ choose a host with at least 2 GB of memory and confirm the actual peak after a
 real submission. The model is downloaded while the image is built so an
 ephemeral instance does not download it every time it starts.
 
+The current deployment is:
+
+- URL: `https://ca-provenance-guard.wonderfulground-5f32bf09.westus2.azurecontainerapps.io`
+- Subscription: `Visual Studio Enterprise Subscription`
+- Resource group: `rg-ai201-provenance-guard`
+- Registry: `pgacr77fa7a25.azurecr.io`
+- Container Apps environment: `cae-ai201-provenance`
+- Container App: `ca-provenance-guard`
+- Allocation: 1 vCPU, 2 GiB memory, zero to one replica
+
+Use the isolated Azure CLI profile whenever inspecting or updating it:
+
+```powershell
+$env:AZURE_CONFIG_DIR = "$HOME\.azure-capstone"
+az account set --subscription "Visual Studio Enterprise Subscription"
+az containerapp show `
+  --name ca-provenance-guard `
+  --resource-group rg-ai201-provenance-guard `
+  --query "{url:properties.configuration.ingress.fqdn,state:properties.runningStatus}"
+```
+
+The deployed image was built from this repository without local Docker:
+
+```powershell
+az acr build `
+  --registry pgacr77fa7a25 `
+  --image provenance-guard:capstone-a69c610 `
+  --file Dockerfile `
+  .
+```
+
+The hosted log token is generated randomly, stored outside the repository, and
+configured as the Container App secret `log-access-token`. Never paste its
+value into this file or commit it.
+
 The container has one start command:
 
 ```bash

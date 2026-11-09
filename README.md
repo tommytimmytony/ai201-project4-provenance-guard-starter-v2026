@@ -52,6 +52,22 @@ in milliseconds. Submitted text, appeal reasoning, credentials, and creator
 identities are excluded. Hosted access to `/log` and `/operations` fails closed
 unless `AI201_LOG_ACCESS_TOKEN` is configured and sent as a bearer token.
 
+The improved hosted run preserved these ten real synthetic-submission records
+before the scale-to-zero container could discard them:
+
+```json
+{"timestamp":"2026-11-09T01:19:10+00:00","request_id":"47203f82-a461-4e22-8be4-bb16ad277097","method":"POST","route":"/submit","status_code":200,"duration_ms":98.272,"input":{"fields":["creator_id","text"],"text_chars":120,"text_words":16},"output":{"outcome":"decided"},"detector_loaded_before":true,"detector_loaded_after":true}
+{"timestamp":"2026-11-09T01:19:10+00:00","request_id":"09f90a83-dde5-4183-85af-9b83e358e3cb","method":"POST","route":"/submit","status_code":200,"duration_ms":120.822,"input":{"fields":["creator_id","text"],"text_chars":120,"text_words":16},"output":{"outcome":"decided"},"detector_loaded_before":true,"detector_loaded_after":true}
+{"timestamp":"2026-11-09T01:19:10+00:00","request_id":"e3e43b85-2668-4f5f-be6a-a5fea880a86e","method":"POST","route":"/submit","status_code":200,"duration_ms":122.393,"input":{"fields":["creator_id","text"],"text_chars":120,"text_words":16},"output":{"outcome":"decided"},"detector_loaded_before":true,"detector_loaded_after":true}
+{"timestamp":"2026-11-09T01:19:10+00:00","request_id":"45db11eb-08dc-4ee9-a768-846fa91c0947","method":"POST","route":"/submit","status_code":200,"duration_ms":52.266,"input":{"fields":["creator_id","text"],"text_chars":120,"text_words":16},"output":{"outcome":"decided"},"detector_loaded_before":true,"detector_loaded_after":true}
+{"timestamp":"2026-11-09T01:19:10+00:00","request_id":"e27e68b8-6d79-429e-bfa1-37c158ffc9a1","method":"POST","route":"/submit","status_code":200,"duration_ms":94.648,"input":{"fields":["creator_id","text"],"text_chars":120,"text_words":16},"output":{"outcome":"decided"},"detector_loaded_before":true,"detector_loaded_after":true}
+{"timestamp":"2026-11-09T01:19:10+00:00","request_id":"2439e18f-6bac-423f-b8a5-83838171f1cc","method":"POST","route":"/submit","status_code":200,"duration_ms":51.898,"input":{"fields":["creator_id","text"],"text_chars":120,"text_words":16},"output":{"outcome":"decided"},"detector_loaded_before":true,"detector_loaded_after":true}
+{"timestamp":"2026-11-09T01:19:11+00:00","request_id":"2cc44b8c-0f45-4ba0-99cc-711b164ec5e2","method":"POST","route":"/submit","status_code":200,"duration_ms":51.783,"input":{"fields":["creator_id","text"],"text_chars":120,"text_words":16},"output":{"outcome":"decided"},"detector_loaded_before":true,"detector_loaded_after":true}
+{"timestamp":"2026-11-09T01:19:11+00:00","request_id":"992a4d87-d1ae-4808-b5e3-cedac6596080","method":"POST","route":"/submit","status_code":200,"duration_ms":92.127,"input":{"fields":["creator_id","text"],"text_chars":120,"text_words":16},"output":{"outcome":"decided"},"detector_loaded_before":true,"detector_loaded_after":true}
+{"timestamp":"2026-11-09T01:19:11+00:00","request_id":"1489a3ce-f545-4a07-84ef-5830a4eb6b58","method":"POST","route":"/submit","status_code":200,"duration_ms":95.373,"input":{"fields":["creator_id","text"],"text_chars":120,"text_words":16},"output":{"outcome":"decided"},"detector_loaded_before":true,"detector_loaded_after":true}
+{"timestamp":"2026-11-09T01:19:11+00:00","request_id":"9b3cceee-13d8-41ef-aadf-eb642615fa84","method":"POST","route":"/submit","status_code":200,"duration_ms":100.84,"input":{"fields":["creator_id","text"],"text_chars":120,"text_words":16},"output":{"outcome":"decided"},"detector_loaded_before":true,"detector_loaded_after":true}
+```
+
 ## Capstone: Hosted Verification
 
 The first hosted run completed on November 8, 2026. All five committed
@@ -64,11 +80,87 @@ operational records. The complete measured evidence is in
 ## Capstone: What It Costs
 
 The deployment uses a dedicated Basic Azure Container Registry and an Azure
-Container Apps consumption environment configured to scale to zero. The
-resources were created on November 8, 2026, so Azure billing data had not yet
-settled when the first hosted run completed. No dollar amount is claimed until
-the subscription's billing record reports the measured charge. The Visual
-Studio subscription spending limit remains the external cost guardrail.
+Container Apps consumption environment configured to scale to zero. Ten warm
+synthetic `/submit` requests averaged **0.088042 service compute seconds per
+run** and **0.152571 client-observed seconds per run**. This came from matching
+each response's `X-Request-ID` to its hosted `/operations` record and averaging
+the ten recorded `duration_ms` values. At 100 submissions per day, the measured
+service work is:
+
+```text
+0.088042 seconds/run x 100 runs/day = 8.8042 service compute seconds/day
+```
+
+All ten records say `detector_loaded_before: true`, so this is explicitly a
+warm-request measurement; it does not claim cold-start cost. Azure billing had
+not yet settled, so no dollar amount is substituted for this measured compute
+cost. The Visual Studio subscription spending limit remains the external cost
+guardrail, and the Basic registry continues to incur storage charges while it
+exists.
+
+## Capstone: Run Log and Verdicts
+
+The unchanged five criteria were run three times before and after the
+observability improvement. Full output is committed in
+[`results/capstone_hosted_2026-11-08_170516.md`](results/capstone_hosted_2026-11-08_170516.md)
+and
+[`results/capstone_hosted_2026-11-08_171911.md`](results/capstone_hosted_2026-11-08_171911.md).
+
+| Criterion and target | Before: three trials | Before | After: three trials | After |
+|---|---|---|---|---|
+| 1. `/health`: 3/3 HTTP 200 with `ok=true` | 77.677, 52.497, 102.610 ms | MET | 93.651, 93.139, 94.074 ms | MET |
+| 2. `/log` and `/operations`: 3/3 unauthorized attempts rejected per route | Both routes returned 401 in all trials | MET | Both routes returned 401 in all trials | MET |
+| 3. `/health`: 3/3 at or below 1,000 ms | 191.630, 92.321, 59.503 ms | MET | 146.241, 56.667, 145.611 ms | MET |
+| 4. `POST /health`: 3/3 HTTP 405 without traceback | 125.127, 77.569, 107.210 ms | MET | 42.721, 68.957, 89.701 ms | MET |
+| 5. Sensitive values: zero unredacted occurrences | 0, 0, 0 | MET | 0, 0, 0 | MET |
+
+Representative real output from `run_capstone.py`, which produced both result
+files:
+
+```text
+Criterion 1: {"status_code": 200, "ok": true, "duration_ms": 93.651}
+Criterion 2: /log 401; /operations 401; protected_data_returned=false
+Criterion 3: {"status_code": 200, "duration_ms": 146.241, "passed": true}
+Criterion 4: {"status_code": 405, "contains_method_not_allowed": true, "contains_traceback": false}
+Criterion 5: {"submission_status_code": 200, "log_status_code": 200, "operations_status_code": 200, "unredacted_sensitive_value_count": 0}
+```
+
+Every criterion was met in both runs, so there is no missed-criterion stage or
+mechanism to diagnose. The observed weakness was instead in the evidence path:
+after the scale-to-zero container recycled, the first run's live
+`/operations` history was empty because the file was stored on ephemeral
+container storage.
+
+## Capstone: The Improvement
+
+The one improvement was to make `run_capstone.py` preserve hosted operational
+evidence before the container can discard it. The runner now performs ten
+synthetic measurement submissions, captures each response's `X-Request-ID`,
+matches those IDs against authorized `/operations` records, calculates the
+measured compute seconds, and embeds the exact privacy-preserving records in
+the committed result.
+
+The criteria remained MET before and after. The measured observability result
+changed from **zero raw operation records preserved in the first artifact** to
+**10 of 10 matching records preserved in the second artifact**. This did not
+change the detector or its labels; it made the hosted behavior durable and
+auditable.
+
+## Capstone: What's Still Broken
+
+- The container's complete local request log is still ephemeral. The runner
+  preserves its selected evidence, not every request made by every caller.
+- Cold-start latency and compute cost are not measured. The retained ten-run
+  cost set is warm, as shown by `detector_loaded_before: true`.
+- Azure's dollar-denominated charge was not available immediately after
+  deployment, so the cost claim remains measured service seconds rather than
+  an invented price.
+- The in-memory rate limiter resets when the single replica is replaced.
+
+The first production improvement would be persistent external structured
+logging, because losing unselected failures prevents later diagnosis. It was
+not added here to keep the capstone to the declared operational extension and
+avoid introducing another continuously billed service.
 
 ## Run locally on Windows
 
@@ -363,6 +455,21 @@ student work.
   improvement rather than silently fixing additional failures. All analysis
   and prose remain AI-assisted; no independent student authorship or portal
   submission is claimed.
+
+  **Moment 5 - capstone**
+
+  - **Request:** The user selected Shape A and Path A, supplied the five final
+    criteria, authorized creation in a personal Visual Studio Azure
+    subscription, and asked Copilot to continue the milestone progress.
+  - **Result:** Copilot added the hosted instrumentation and container path,
+    created the Azure resources, ran both result sets, identified the ephemeral
+    log-evidence gap, and added automatic preservation of ten matching operation
+    records plus measured compute seconds.
+  - **Change:** The user revised and approved the criteria wording before
+    results existed; Copilot reviewed measurability rather than claiming
+    authorship. The deployment commands, diagnoses, tests, measurements, and
+    write-up are AI-assisted. No Azure billing amount or independent student
+    work is fabricated.
 
 ## Run Log and Verdicts
 
